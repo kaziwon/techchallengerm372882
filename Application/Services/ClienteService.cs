@@ -7,6 +7,7 @@ namespace OficinaMecanica.Api.Application.Services;
 
 public class ClienteService : IClienteService
 {
+    private const string CpfCnpjJaCadastrado = "Ja existe um cliente cadastrado com este CPF/CNPJ.";
     private readonly IClienteRepository _clienteRepository;
 
     public ClienteService(IClienteRepository clienteRepository)
@@ -49,6 +50,11 @@ public class ClienteService : IClienteService
 
     public ClienteResponseDto Adicionar(ClienteRequestDto clienteRequestDto)
     {
+        if (_clienteRepository.ExistePorCpfCnpj(clienteRequestDto.CpfCnpj))
+        {
+            throw new InvalidOperationException(CpfCnpjJaCadastrado);
+        }
+
         var cliente = new Cliente
         {
             Id = Guid.NewGuid(),
@@ -72,6 +78,11 @@ public class ClienteService : IClienteService
 
     public ClienteResponseDto? Atualizar(Guid id, ClienteRequestDto clienteRequestDto)
     {
+        if (_clienteRepository.ExistePorCpfCnpjExcetoId(clienteRequestDto.CpfCnpj, id))
+        {
+            throw new InvalidOperationException(CpfCnpjJaCadastrado);
+        }
+
         var cliente = new Cliente
         {
             Id = id,

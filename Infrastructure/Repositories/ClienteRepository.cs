@@ -1,31 +1,40 @@
+using Microsoft.EntityFrameworkCore;
 using OficinaMecanica.Api.Domain.Entities;
 using OficinaMecanica.Api.Domain.Repositories;
+using OficinaMecanica.Api.Infrastructure.Persistence;
 
 namespace OficinaMecanica.Api.Infrastructure.Repositories;
 
 public class ClienteRepository : IClienteRepository
 {
-    private static readonly List<Cliente> Clientes =
-    [
-        new Cliente
-        {
-            Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-            Nome = "Joao Silva",
-            CpfCnpj = "12345678901",
-            Email = "joao.silva@email.com",
-            Telefone = "11999999999"
-        }
-    ];
+    private readonly AppDbContext _context;
+
+    public ClienteRepository(AppDbContext context)
+    {
+        _context = context;
+    }
 
     public Cliente Adicionar(Cliente cliente)
     {
-        Clientes.Add(cliente);
+        _context.Clientes.Add(cliente);
+        _context.SaveChanges();
+
         return cliente;
+    }
+
+    public bool ExistePorCpfCnpj(string cpfCnpj)
+    {
+        return _context.Clientes.Any(cliente => cliente.CpfCnpj == cpfCnpj);
+    }
+
+    public bool ExistePorCpfCnpjExcetoId(string cpfCnpj, Guid id)
+    {
+        return _context.Clientes.Any(cliente => cliente.CpfCnpj == cpfCnpj && cliente.Id != id);
     }
 
     public Cliente? Atualizar(Cliente cliente)
     {
-        var clienteExistente = Clientes.FirstOrDefault(c => c.Id == cliente.Id);
+        var clienteExistente = _context.Clientes.FirstOrDefault(c => c.Id == cliente.Id);
 
         if (clienteExistente is null)
         {
@@ -37,29 +46,32 @@ public class ClienteRepository : IClienteRepository
         clienteExistente.Email = cliente.Email;
         clienteExistente.Telefone = cliente.Telefone;
 
+        _context.SaveChanges();
+
         return clienteExistente;
     }
 
     public List<Cliente> ObterTodos()
     {
-        return Clientes;
+        return _context.Clientes.AsNoTracking().ToList();
     }
 
     public Cliente? ObterPorId(Guid id)
     {
-        return Clientes.FirstOrDefault(cliente => cliente.Id == id);
+        return _context.Clientes.AsNoTracking().FirstOrDefault(cliente => cliente.Id == id);
     }
 
     public bool Remover(Guid id)
     {
-        var cliente = Clientes.FirstOrDefault(c => c.Id == id);
+        var cliente = _context.Clientes.FirstOrDefault(c => c.Id == id);
 
         if (cliente is null)
         {
             return false;
         }
 
-        Clientes.Remove(cliente);
+        _context.Clientes.Remove(cliente);
+        _context.SaveChanges();
 
         return true;
     }
