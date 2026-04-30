@@ -13,7 +13,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
+        new MySqlServerVersion(new Version(8, 4, 0))));
 
 builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
 builder.Services.AddScoped<IClienteService, ClienteService>();
@@ -23,6 +23,8 @@ builder.Services.AddScoped<IServicoRepository, ServicoRepository>();
 builder.Services.AddScoped<IServicoService, ServicoService>();
 builder.Services.AddScoped<IPecaInsumoRepository, PecaInsumoRepository>();
 builder.Services.AddScoped<IPecaInsumoService, PecaInsumoService>();
+builder.Services.AddScoped<IOrdemServicoRepository, OrdemServicoRepository>();
+builder.Services.AddScoped<IOrdemServicoService, OrdemServicoService>();
 
 
 var app = builder.Build();

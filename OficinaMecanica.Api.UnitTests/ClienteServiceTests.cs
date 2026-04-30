@@ -146,6 +146,11 @@ public class ClienteServiceTests
             return ExistePorCpfCnpjResult || Clientes.Any(cliente => cliente.CpfCnpj == cpfCnpj);
         }
 
+        public Cliente? ObterPorCpfCnpj(string cpfCnpj)
+        {
+            return Clientes.FirstOrDefault(cliente => cliente.CpfCnpj == cpfCnpj);
+        }
+
         public bool ExistePorCpfCnpjExcetoId(string cpfCnpj, Guid id)
         {
             return ExistePorCpfCnpjExcetoIdResult || Clientes.Any(cliente => cliente.CpfCnpj == cpfCnpj && cliente.Id != id);

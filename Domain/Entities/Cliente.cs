@@ -8,4 +8,5 @@ public class Cliente
     public string Email { get; set; } = string.Empty;
     public string Telefone { get; set; } = string.Empty;
     public ICollection<Veiculo> Veiculos { get; set; } = [];
+    public ICollection<OrdemServico> OrdensServico { get; set; } = [];
 }

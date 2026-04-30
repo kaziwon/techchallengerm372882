@@ -9,4 +9,5 @@ public class Veiculo
     public string Modelo { get; set; } = string.Empty;
     public int Ano { get; set; }
     public Cliente? Cliente { get; set; }
+    public ICollection<OrdemServico> OrdensServico { get; set; } = [];
 }

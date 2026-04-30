@@ -27,6 +27,11 @@ public class ClienteRepository : IClienteRepository
         return _context.Clientes.Any(cliente => cliente.CpfCnpj == cpfCnpj);
     }
 
+    public Cliente? ObterPorCpfCnpj(string cpfCnpj)
+    {
+        return _context.Clientes.AsNoTracking().FirstOrDefault(cliente => cliente.CpfCnpj == cpfCnpj);
+    }
+
     public bool ExistePorCpfCnpjExcetoId(string cpfCnpj, Guid id)
     {
         return _context.Clientes.Any(cliente => cliente.CpfCnpj == cpfCnpj && cliente.Id != id);

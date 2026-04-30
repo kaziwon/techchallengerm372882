@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OficinaMecanica.Api.IntegrationTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+82674f40e4aaddbef2203a7cb1b76e1ae3081d8b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6c81cb327e9b26ca322f5db6dc275bd0e33b239f")]
 [assembly: System.Reflection.AssemblyProductAttribute("OficinaMecanica.Api.IntegrationTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OficinaMecanica.Api.IntegrationTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
