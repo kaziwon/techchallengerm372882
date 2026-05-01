@@ -10,10 +10,4 @@ public class OrdemServicoRequestDto
 
     [Required]
     public Guid VeiculoId { get; set; }
-
-    [Required]
-    [MinLength(1)]
-    public List<Guid> ServicoIds { get; set; } = [];
-
-    public List<OrdemServicoItemPecaInsumoRequestDto> PecasInsumos { get; set; } = [];
 }

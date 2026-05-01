@@ -115,3 +115,11 @@
 /Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/obj/Debug/net10.0/OficinaMecanica.Api.UnitTests.genruntimeconfig.cache
 /Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/obj/Debug/net10.0/ref/OficinaMecanica.Api.UnitTests.dll
 /Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/bin/Debug/net10.0/BrazilianDocuments.dll
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/bin/Debug/net10.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/bin/Debug/net10.0/Microsoft.IdentityModel.Abstractions.dll
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/bin/Debug/net10.0/Microsoft.IdentityModel.JsonWebTokens.dll
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/bin/Debug/net10.0/Microsoft.IdentityModel.Logging.dll
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/bin/Debug/net10.0/Microsoft.IdentityModel.Protocols.dll
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/bin/Debug/net10.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/bin/Debug/net10.0/Microsoft.IdentityModel.Tokens.dll
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/bin/Debug/net10.0/System.IdentityModel.Tokens.Jwt.dll

@@ -1,0 +1,13 @@
+﻿/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/AuthEndpointsTests.cs
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/AuthTestHelper.cs
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/ClienteEndpointsTests.cs
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/CustomWebApplicationFactory.cs
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/OrdemServicoEndpointsTests.cs
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/PecaEndpointsTests.cs
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/ServicoEndpointsTests.cs
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/VeiculoEndpointsTests.cs
+/Users/jcabral/.nuget/packages/microsoft.net.test.sdk/17.14.1/build/net8.0/Microsoft.NET.Test.Sdk.Program.cs
+/Users/jcabral/.nuget/packages/xunit.runner.visualstudio/3.1.4/build/net8.0/xunit.abstractions.dll
+/Users/jcabral/.nuget/packages/xunit.runner.visualstudio/3.1.4/build/net8.0/xunit.runner.visualstudio.testadapter.dll
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/TestResults/2f8f233c-e6c8-4e59-b291-86c69cbd9222/coverage.cobertura.xml
+/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/TestResults/601b83cd-01bb-4608-9583-db6a8561fea2/coverage.cobertura.xml

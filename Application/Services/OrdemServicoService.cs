@@ -45,6 +45,33 @@ public class OrdemServicoService : IOrdemServicoService
         return _ordemServicoRepository.ObterTodas().Select(MapearParaResponse).ToList();
     }
 
+    public TempoMedioExecucaoResponseDto ObterTempoMedioExecucao()
+    {
+        var ordensFinalizadas = _ordemServicoRepository.ObterTodas()
+            .Where(ordemServico => ordemServico.ExecucaoIniciadaEm.HasValue && ordemServico.FinalizadaEm.HasValue)
+            .ToList();
+
+        if (ordensFinalizadas.Count == 0)
+        {
+            return new TempoMedioExecucaoResponseDto
+            {
+                QuantidadeOrdensConsideradas = 0,
+                TempoMedioExecucaoEmMinutos = 0,
+                TempoMedioExecucaoFormatado = "00:00:00"
+            };
+        }
+
+        var media = TimeSpan.FromTicks((long)ordensFinalizadas
+            .Average(ordemServico => (ordemServico.FinalizadaEm!.Value - ordemServico.ExecucaoIniciadaEm!.Value).Ticks));
+
+        return new TempoMedioExecucaoResponseDto
+        {
+            QuantidadeOrdensConsideradas = ordensFinalizadas.Count,
+            TempoMedioExecucaoEmMinutos = Math.Round(media.TotalMinutes, 2),
+            TempoMedioExecucaoFormatado = media.ToString(@"hh\:mm\:ss")
+        };
+    }
+
     public List<OrdemServicoResponseDto> ObterPorCpfCnpjCliente(string cpfCnpj)
     {
         var cpfCnpjNormalizado = NormalizarCpfCnpj(cpfCnpj);
@@ -83,58 +110,7 @@ public class OrdemServicoService : IOrdemServicoService
             throw new InvalidOperationException(VeiculoNaoPertenceAoCliente);
         }
 
-        var itensServico = new List<OrdemServicoItemServico>();
-        decimal valorTotalServicos = 0;
-
-        foreach (var servicoId in ordemServicoRequestDto.ServicoIds)
-        {
-            var servico = _servicoRepository.ObterPorId(servicoId);
-
-            if (servico is null)
-            {
-                throw new InvalidOperationException(ServicoNaoEncontrado);
-            }
-
-            itensServico.Add(new OrdemServicoItemServico
-            {
-                Id = Guid.NewGuid(),
-                ServicoId = servico.Id,
-                NomeServico = servico.Nome,
-                PrecoServico = servico.Preco
-            });
-
-            valorTotalServicos += servico.Preco;
-        }
-
-        var itensPecaInsumo = new List<OrdemServicoItemPecaInsumo>();
-        decimal valorTotalPecasInsumos = 0;
-
-        foreach (var itemPeca in ordemServicoRequestDto.PecasInsumos)
-        {
-            var pecaInsumo = _pecaInsumoRepository.ObterPorId(itemPeca.PecaInsumoId);
-
-            if (pecaInsumo is null)
-            {
-                throw new InvalidOperationException(PecaInsumoNaoEncontrado);
-            }
-
-            var subtotal = pecaInsumo.PrecoUnitario * itemPeca.Quantidade;
-
-            itensPecaInsumo.Add(new OrdemServicoItemPecaInsumo
-            {
-                Id = Guid.NewGuid(),
-                PecaInsumoId = pecaInsumo.Id,
-                NomePecaInsumo = pecaInsumo.Nome,
-                PrecoUnitario = pecaInsumo.PrecoUnitario,
-                Quantidade = itemPeca.Quantidade,
-                Subtotal = subtotal
-            });
-
-            valorTotalPecasInsumos += subtotal;
-        }
-
         var agora = DateTime.UtcNow;
-        var valorTotalOrcamento = valorTotalServicos + valorTotalPecasInsumos;
 
         var ordemServico = new OrdemServico
         {
@@ -143,24 +119,12 @@ public class OrdemServicoService : IOrdemServicoService
             VeiculoId = veiculo.Id,
             Status = StatusOrdemServico.Recebida,
             StatusAprovacaoOrcamento = StatusAprovacaoOrcamento.Pendente,
-            ValorTotalServicos = valorTotalServicos,
-            ValorTotalPecasInsumos = valorTotalPecasInsumos,
-            ValorTotalOrcamento = valorTotalOrcamento,
+            ValorTotalServicos = 0,
+            ValorTotalPecasInsumos = 0,
+            ValorTotalOrcamento = 0,
             EnvioOrcamento = string.Empty,
-            CriadaEm = agora,
-            ItensServico = itensServico,
-            ItensPecaInsumo = itensPecaInsumo
+            CriadaEm = agora
         };
-
-        foreach (var itemServico in ordemServico.ItensServico)
-        {
-            itemServico.OrdemServicoId = ordemServico.Id;
-        }
-
-        foreach (var itemPecaInsumo in ordemServico.ItensPecaInsumo)
-        {
-            itemPecaInsumo.OrdemServicoId = ordemServico.Id;
-        }
 
         return MapearParaResponse(_ordemServicoRepository.Adicionar(ordemServico));
     }
@@ -185,7 +149,7 @@ public class OrdemServicoService : IOrdemServicoService
         return MapearParaResponse(_ordemServicoRepository.Atualizar(ordemServico)!);
     }
 
-    public OrdemServicoResponseDto? EnviarOrcamento(Guid id)
+    public OrdemServicoResponseDto? EnviarOrcamento(Guid id, OrdemServicoOrcamentoRequestDto requestDto)
     {
         var ordemServico = _ordemServicoRepository.ObterPorId(id);
 
@@ -199,12 +163,80 @@ public class OrdemServicoService : IOrdemServicoService
             throw new InvalidOperationException(OrdemServicoNaoEstaEmDiagnostico);
         }
 
-        var agora = DateTime.UtcNow;
+        var itensServico = new List<OrdemServicoItemServico>();
+        decimal valorTotalServicos = 0;
 
+        foreach (var servicoId in requestDto.ServicoIds)
+        {
+            var servico = _servicoRepository.ObterPorId(servicoId);
+
+            if (servico is null)
+            {
+                throw new InvalidOperationException(ServicoNaoEncontrado);
+            }
+
+            itensServico.Add(new OrdemServicoItemServico
+            {
+                Id = Guid.NewGuid(),
+                OrdemServicoId = ordemServico.Id,
+                ServicoId = servico.Id,
+                NomeServico = servico.Nome,
+                PrecoServico = servico.Preco
+            });
+
+            valorTotalServicos += servico.Preco;
+        }
+
+        var itensPecaInsumo = new List<OrdemServicoItemPecaInsumo>();
+        decimal valorTotalPecasInsumos = 0;
+
+        foreach (var itemPeca in requestDto.PecasInsumos)
+        {
+            var pecaInsumo = _pecaInsumoRepository.ObterPorId(itemPeca.PecaInsumoId);
+
+            if (pecaInsumo is null)
+            {
+                throw new InvalidOperationException(PecaInsumoNaoEncontrado);
+            }
+
+            var subtotal = pecaInsumo.PrecoUnitario * itemPeca.Quantidade;
+
+            itensPecaInsumo.Add(new OrdemServicoItemPecaInsumo
+            {
+                Id = Guid.NewGuid(),
+                OrdemServicoId = ordemServico.Id,
+                PecaInsumoId = pecaInsumo.Id,
+                NomePecaInsumo = pecaInsumo.Nome,
+                PrecoUnitario = pecaInsumo.PrecoUnitario,
+                Quantidade = itemPeca.Quantidade,
+                Subtotal = subtotal
+            });
+
+            valorTotalPecasInsumos += subtotal;
+        }
+
+        var agora = DateTime.UtcNow;
+        var valorTotalOrcamento = valorTotalServicos + valorTotalPecasInsumos;
+
+        ordemServico.ItensServico.Clear();
+        foreach (var itemServico in itensServico)
+        {
+            ordemServico.ItensServico.Add(itemServico);
+        }
+
+        ordemServico.ItensPecaInsumo.Clear();
+        foreach (var itemPecaInsumo in itensPecaInsumo)
+        {
+            ordemServico.ItensPecaInsumo.Add(itemPecaInsumo);
+        }
+
+        ordemServico.ValorTotalServicos = valorTotalServicos;
+        ordemServico.ValorTotalPecasInsumos = valorTotalPecasInsumos;
+        ordemServico.ValorTotalOrcamento = valorTotalOrcamento;
         ordemServico.Status = StatusOrdemServico.AguardandoAprovacao;
         ordemServico.StatusAprovacaoOrcamento = StatusAprovacaoOrcamento.Pendente;
         ordemServico.OrcamentoEnviadoEm = agora;
-        ordemServico.EnvioOrcamento = $"Orcamento enviado para {ordemServico.Cliente?.Email} em {agora:O}";
+        ordemServico.EnvioOrcamento = $"Orcamento enviado para {ordemServico.Cliente?.Email}";
 
         return MapearParaResponse(_ordemServicoRepository.Atualizar(ordemServico)!);
     }

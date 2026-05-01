@@ -1,0 +1,1379 @@
+<?xml version="1.0"?>
+<OWASPZAPReport programName="ZAP" version="2.17.0" generated="Fri, 1 May 2026 20:28:09" created="2026-05-01T20:28:09.818465386Z">
+	
+		<site name="http://host.docker.internal:8080" host="host.docker.internal" port="8080" ssl="false">
+			<alerts>
+				
+					<alertitem>
+						<pluginid>90004</pluginid>
+						<alertRef>90004-1</alertRef>
+						<alert>Cross-Origin-Resource-Policy Header Missing or Invalid</alert>
+						<name>Cross-Origin-Resource-Policy Header Missing or Invalid</name>
+						<riskcode>1</riskcode>
+						<confidence>2</confidence>
+						<riskdesc>Low (Medium)</riskdesc>
+						<confidencedesc>Medium</confidencedesc>
+						<desc>&lt;p&gt;Cross-Origin-Resource-Policy header is an opt-in header designed to counter side-channels attacks like Spectre. Resource should be specifically set as shareable amongst different origins.&lt;/p&gt;</desc>
+						<instances>
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Clientes</uri>
+									<nodeName>http://host.docker.internal:8080/api/Clientes</nodeName>
+									<method>GET</method>
+									<param>Cross-Origin-Resource-Policy</param>
+									<attack></attack>
+									<evidence></evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico</nodeName>
+									<method>GET</method>
+									<param>Cross-Origin-Resource-Policy</param>
+									<attack></attack>
+									<evidence></evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/tempo-medio-execucao</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/tempo-medio-execucao</nodeName>
+									<method>GET</method>
+									<param>Cross-Origin-Resource-Policy</param>
+									<attack></attack>
+									<evidence></evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Pecas</uri>
+									<nodeName>http://host.docker.internal:8080/api/Pecas</nodeName>
+									<method>GET</method>
+									<param>Cross-Origin-Resource-Policy</param>
+									<attack></attack>
+									<evidence></evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/swagger/v1/swagger.json</uri>
+									<nodeName>http://host.docker.internal:8080/swagger/v1/swagger.json</nodeName>
+									<method>GET</method>
+									<param>Cross-Origin-Resource-Policy</param>
+									<attack></attack>
+									<evidence></evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+						</instances>
+						<count>5</count>
+						<systemic>true</systemic>
+						<solution>&lt;p&gt;Ensure that the application/web server sets the Cross-Origin-Resource-Policy header appropriately, and that it sets the Cross-Origin-Resource-Policy header to &apos;same-origin&apos; for all web pages.&lt;/p&gt;&lt;p&gt;&apos;same-site&apos; is considered as less secured and should be avoided.&lt;/p&gt;&lt;p&gt;If resources must be shared, set the header to &apos;cross-origin&apos;.&lt;/p&gt;&lt;p&gt;If possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Resource-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-resource-policy).&lt;/p&gt;</solution>
+						<otherinfo></otherinfo>
+						<reference>&lt;p&gt;https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy&lt;/p&gt;</reference>
+						<cweid>693</cweid>
+						<wascid>14</wascid>
+						<sourceid>8</sourceid>
+					</alertitem>
+				
+				
+					<alertitem>
+						<pluginid>100001</pluginid>
+						<alertRef>100001</alertRef>
+						<alert>Unexpected Content-Type was returned</alert>
+						<name>Unexpected Content-Type was returned</name>
+						<riskcode>1</riskcode>
+						<confidence>3</confidence>
+						<riskdesc>Low (High)</riskdesc>
+						<confidencedesc>High</confidencedesc>
+						<desc>&lt;p&gt;A Content-Type of text/html was returned by the server.&lt;/p&gt;&lt;p&gt;This is not one of the types expected to be returned by an API.&lt;/p&gt;&lt;p&gt;Raised by the &apos;Alert on Unexpected Content Types&apos; script&lt;/p&gt;</desc>
+						<instances>
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/swagger/</uri>
+									<nodeName>http://host.docker.internal:8080/swagger/</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>text/html</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/swagger/index.html</uri>
+									<nodeName>http://host.docker.internal:8080/swagger/index.html</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>text/html</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+						</instances>
+						<count>2</count>
+						<systemic>false</systemic>
+						<solution></solution>
+						<otherinfo></otherinfo>
+						<reference></reference>
+						<cweid>-1</cweid>
+						<wascid>-1</wascid>
+						<sourceid>4271</sourceid>
+					</alertitem>
+				
+				
+					<alertitem>
+						<pluginid>10021</pluginid>
+						<alertRef>10021</alertRef>
+						<alert>X-Content-Type-Options Header Missing</alert>
+						<name>X-Content-Type-Options Header Missing</name>
+						<riskcode>1</riskcode>
+						<confidence>2</confidence>
+						<riskdesc>Low (Medium)</riskdesc>
+						<confidencedesc>Medium</confidencedesc>
+						<desc>&lt;p&gt;The Anti-MIME-Sniffing header X-Content-Type-Options was not set to &apos;nosniff&apos;. This allows older versions of Internet Explorer and Chrome to perform MIME-sniffing on the response body, potentially causing the response body to be interpreted and displayed as a content type other than the declared content type. Current (early 2014) and legacy versions of Firefox will use the declared content type (if one is set), rather than performing MIME-sniffing.&lt;/p&gt;</desc>
+						<instances>
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Clientes</uri>
+									<nodeName>http://host.docker.internal:8080/api/Clientes</nodeName>
+									<method>GET</method>
+									<param>x-content-type-options</param>
+									<attack></attack>
+									<evidence></evidence>
+									<otherinfo>This issue still applies to error type pages (401, 403, 500, etc.) as those pages are often still affected by injection issues, in which case there is still concern for browsers sniffing pages away from their actual content type.
+At &quot;High&quot; threshold this scan rule will not alert on client or server error responses.</otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico</nodeName>
+									<method>GET</method>
+									<param>x-content-type-options</param>
+									<attack></attack>
+									<evidence></evidence>
+									<otherinfo>This issue still applies to error type pages (401, 403, 500, etc.) as those pages are often still affected by injection issues, in which case there is still concern for browsers sniffing pages away from their actual content type.
+At &quot;High&quot; threshold this scan rule will not alert on client or server error responses.</otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/tempo-medio-execucao</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/tempo-medio-execucao</nodeName>
+									<method>GET</method>
+									<param>x-content-type-options</param>
+									<attack></attack>
+									<evidence></evidence>
+									<otherinfo>This issue still applies to error type pages (401, 403, 500, etc.) as those pages are often still affected by injection issues, in which case there is still concern for browsers sniffing pages away from their actual content type.
+At &quot;High&quot; threshold this scan rule will not alert on client or server error responses.</otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Pecas</uri>
+									<nodeName>http://host.docker.internal:8080/api/Pecas</nodeName>
+									<method>GET</method>
+									<param>x-content-type-options</param>
+									<attack></attack>
+									<evidence></evidence>
+									<otherinfo>This issue still applies to error type pages (401, 403, 500, etc.) as those pages are often still affected by injection issues, in which case there is still concern for browsers sniffing pages away from their actual content type.
+At &quot;High&quot; threshold this scan rule will not alert on client or server error responses.</otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/swagger/v1/swagger.json</uri>
+									<nodeName>http://host.docker.internal:8080/swagger/v1/swagger.json</nodeName>
+									<method>GET</method>
+									<param>x-content-type-options</param>
+									<attack></attack>
+									<evidence></evidence>
+									<otherinfo>This issue still applies to error type pages (401, 403, 500, etc.) as those pages are often still affected by injection issues, in which case there is still concern for browsers sniffing pages away from their actual content type.
+At &quot;High&quot; threshold this scan rule will not alert on client or server error responses.</otherinfo>
+								</instance>
+							
+						</instances>
+						<count>5</count>
+						<systemic>true</systemic>
+						<solution>&lt;p&gt;Ensure that the application/web server sets the Content-Type header appropriately, and that it sets the X-Content-Type-Options header to &apos;nosniff&apos; for all web pages.&lt;/p&gt;&lt;p&gt;If possible, ensure that the end user uses a standards-compliant and modern web browser that does not perform MIME-sniffing at all, or that can be directed by the web application/web server to not perform MIME-sniffing.&lt;/p&gt;</solution>
+						<otherinfo>&lt;p&gt;This issue still applies to error type pages (401, 403, 500, etc.) as those pages are often still affected by injection issues, in which case there is still concern for browsers sniffing pages away from their actual content type.&lt;/p&gt;&lt;p&gt;At &quot;High&quot; threshold this scan rule will not alert on client or server error responses.&lt;/p&gt;</otherinfo>
+						<reference>&lt;p&gt;https://learn.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/compatibility/gg622941(v=vs.85)&lt;/p&gt;&lt;p&gt;https://owasp.org/www-community/Security_Headers&lt;/p&gt;</reference>
+						<cweid>693</cweid>
+						<wascid>15</wascid>
+						<sourceid>8</sourceid>
+					</alertitem>
+				
+				
+					<alertitem>
+						<pluginid>100000</pluginid>
+						<alertRef>100000-1</alertRef>
+						<alert>A Client Error response code was returned by the server</alert>
+						<name>A Client Error response code was returned by the server</name>
+						<riskcode>0</riskcode>
+						<confidence>3</confidence>
+						<riskdesc>Informational (High)</riskdesc>
+						<confidencedesc>High</confidencedesc>
+						<desc>&lt;p&gt;A response code of 404 was returned by the server.&lt;/p&gt;&lt;p&gt;This may indicate that the application is failing to handle unexpected input correctly.&lt;/p&gt;&lt;p&gt;Raised by the &apos;Alert on HTTP Response Code Error&apos; script&lt;/p&gt;</desc>
+						<instances>
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Clientes/id</uri>
+									<nodeName>http://host.docker.internal:8080/api/Clientes/id</nodeName>
+									<method>DELETE</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Clientes/id/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Clientes/id/</nodeName>
+									<method>DELETE</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Pecas/id</uri>
+									<nodeName>http://host.docker.internal:8080/api/Pecas/id</nodeName>
+									<method>DELETE</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Pecas/id/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Pecas/id/</nodeName>
+									<method>DELETE</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Servicos/id</uri>
+									<nodeName>http://host.docker.internal:8080/api/Servicos/id</nodeName>
+									<method>DELETE</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Servicos/id/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Servicos/id/</nodeName>
+									<method>DELETE</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Veiculos/id</uri>
+									<nodeName>http://host.docker.internal:8080/api/Veiculos/id</nodeName>
+									<method>DELETE</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Veiculos/id/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Veiculos/id/</nodeName>
+									<method>DELETE</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080</uri>
+									<nodeName>http://host.docker.internal:8080</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/</uri>
+									<nodeName>http://host.docker.internal:8080/</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/9024828674514542806</uri>
+									<nodeName>http://host.docker.internal:8080/9024828674514542806</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api</uri>
+									<nodeName>http://host.docker.internal:8080/api</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/</uri>
+									<nodeName>http://host.docker.internal:8080/api/</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/859067390331949487</uri>
+									<nodeName>http://host.docker.internal:8080/api/859067390331949487</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Auth</uri>
+									<nodeName>http://host.docker.internal:8080/api/Auth</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Auth/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Auth/</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Auth/7504694818045787746</uri>
+									<nodeName>http://host.docker.internal:8080/api/Auth/7504694818045787746</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Auth/actuator/health</uri>
+									<nodeName>http://host.docker.internal:8080/api/Auth/actuator/health</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Clientes/6846159125045339300</uri>
+									<nodeName>http://host.docker.internal:8080/api/Clientes/6846159125045339300</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Clientes/id</uri>
+									<nodeName>http://host.docker.internal:8080/api/Clientes/id</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Clientes/id/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Clientes/id/</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/7792816822743875305</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/7792816822743875305</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/cliente</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/cliente</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/cliente/</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/cliente/</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id/</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id/</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id/1347241496202488002</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id/1347241496202488002</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Pecas/8757650620489992447</uri>
+									<nodeName>http://host.docker.internal:8080/api/Pecas/8757650620489992447</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Pecas/id</uri>
+									<nodeName>http://host.docker.internal:8080/api/Pecas/id</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Pecas/id/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Pecas/id/</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Servicos/7276891782445164062</uri>
+									<nodeName>http://host.docker.internal:8080/api/Servicos/7276891782445164062</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Servicos/id</uri>
+									<nodeName>http://host.docker.internal:8080/api/Servicos/id</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Servicos/id/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Servicos/id/</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Veiculos/9082770584925208363</uri>
+									<nodeName>http://host.docker.internal:8080/api/Veiculos/9082770584925208363</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Veiculos/id</uri>
+									<nodeName>http://host.docker.internal:8080/api/Veiculos/id</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Veiculos/id/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Veiculos/id/</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/swagger/7807782638317570376</uri>
+									<nodeName>http://host.docker.internal:8080/swagger/7807782638317570376</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/swagger/v1</uri>
+									<nodeName>http://host.docker.internal:8080/swagger/v1</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/swagger/v1/</uri>
+									<nodeName>http://host.docker.internal:8080/swagger/v1/</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/swagger/v1/8111540999871966000</uri>
+									<nodeName>http://host.docker.internal:8080/swagger/v1/8111540999871966000</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Auth/login</uri>
+									<nodeName>http://host.docker.internal:8080/api/Auth/login ()({username,password})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>401</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Auth/login/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Auth/login/ ()({username,password})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>401</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Clientes</uri>
+									<nodeName>http://host.docker.internal:8080/api/Clientes ()({nome,cpfCnpj,email,telefone})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>400</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Clientes/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Clientes/ ()({nome,cpfCnpj,email,telefone})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>400</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico ()({cpfCnpj,veiculoId})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>400</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/ ()({cpfCnpj,veiculoId})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>400</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id/aprovar-orcamento</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id/aprovar-orcamento</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id/aprovar-orcamento/</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id/aprovar-orcamento/</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id/cancelar</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id/cancelar</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id/cancelar/</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id/cancelar/</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id/entregar</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id/entregar</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id/entregar/</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id/entregar/</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id/enviar-orcamento</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id/enviar-orcamento ()({servicoIds:[],pecasInsumos:[{pecaInsumoId,quantidade}]})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id/enviar-orcamento/</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id/enviar-orcamento/ ()({servicoIds:[],pecasInsumos:[{pecaInsumoId,quantidade}]})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id/finalizar</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id/finalizar</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id/finalizar/</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id/finalizar/</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id/iniciar-diagnostico</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id/iniciar-diagnostico</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id/iniciar-diagnostico/</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id/iniciar-diagnostico/</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id/recusar-orcamento</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id/recusar-orcamento ()({motivoRecusa})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/OrdensServico/id/recusar-orcamento/</uri>
+									<nodeName>http://host.docker.internal:8080/api/OrdensServico/id/recusar-orcamento/ ()({motivoRecusa})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Pecas</uri>
+									<nodeName>http://host.docker.internal:8080/api/Pecas ()({nome,descricao,precoUnitario,quantidadeEstoque})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>400</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Pecas</uri>
+									<nodeName>http://host.docker.internal:8080/api/Pecas ()({nome,descricao,precoUnitario,quantidadeEstoque})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>409</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Pecas/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Pecas/ ()({nome,descricao,precoUnitario,quantidadeEstoque})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>409</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Servicos</uri>
+									<nodeName>http://host.docker.internal:8080/api/Servicos ()({nome,descricao,preco})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>400</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Servicos</uri>
+									<nodeName>http://host.docker.internal:8080/api/Servicos ()({nome,descricao,preco})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>409</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Servicos/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Servicos/ ()({nome,descricao,preco})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>409</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Veiculos</uri>
+									<nodeName>http://host.docker.internal:8080/api/Veiculos ()({clienteId,placa,marca,modelo,ano})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>400</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Veiculos/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Veiculos/ ()({clienteId,placa,marca,modelo,ano})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>400</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/computeMetadata/v1/</uri>
+									<nodeName>http://host.docker.internal:8080/computeMetadata/v1/ ()({username,password})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/latest/meta-data/</uri>
+									<nodeName>http://host.docker.internal:8080/latest/meta-data/ ()({username,password})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/metadata/instance</uri>
+									<nodeName>http://host.docker.internal:8080/metadata/instance ()({username,password})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/metadata/v1</uri>
+									<nodeName>http://host.docker.internal:8080/metadata/v1 ()({username,password})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/opc/v1/instance/</uri>
+									<nodeName>http://host.docker.internal:8080/opc/v1/instance/ ()({username,password})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/opc/v2/instance/</uri>
+									<nodeName>http://host.docker.internal:8080/opc/v2/instance/ ()({username,password})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/openstack/latest/meta_data.json</uri>
+									<nodeName>http://host.docker.internal:8080/openstack/latest/meta_data.json ()({username,password})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Clientes/id</uri>
+									<nodeName>http://host.docker.internal:8080/api/Clientes/id ()({nome,cpfCnpj,email,telefone})</nodeName>
+									<method>PUT</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Clientes/id/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Clientes/id/ ()({nome,cpfCnpj,email,telefone})</nodeName>
+									<method>PUT</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Pecas/id</uri>
+									<nodeName>http://host.docker.internal:8080/api/Pecas/id ()({nome,descricao,precoUnitario,quantidadeEstoque})</nodeName>
+									<method>PUT</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Pecas/id/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Pecas/id/ ()({nome,descricao,precoUnitario,quantidadeEstoque})</nodeName>
+									<method>PUT</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Servicos/id</uri>
+									<nodeName>http://host.docker.internal:8080/api/Servicos/id ()({nome,descricao,preco})</nodeName>
+									<method>PUT</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Servicos/id/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Servicos/id/ ()({nome,descricao,preco})</nodeName>
+									<method>PUT</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Veiculos/id</uri>
+									<nodeName>http://host.docker.internal:8080/api/Veiculos/id ()({clienteId,placa,marca,modelo,ano})</nodeName>
+									<method>PUT</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Veiculos/id/</uri>
+									<nodeName>http://host.docker.internal:8080/api/Veiculos/id/ ()({clienteId,placa,marca,modelo,ano})</nodeName>
+									<method>PUT</method>
+									<param></param>
+									<attack></attack>
+									<evidence>404</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+						</instances>
+						<count>83</count>
+						<systemic>false</systemic>
+						<solution></solution>
+						<otherinfo></otherinfo>
+						<reference></reference>
+						<cweid>388</cweid>
+						<wascid>20</wascid>
+						<sourceid>13</sourceid>
+					</alertitem>
+				
+				
+					<alertitem>
+						<pluginid>10111</pluginid>
+						<alertRef>10111</alertRef>
+						<alert>Authentication Request Identified</alert>
+						<name>Authentication Request Identified</name>
+						<riskcode>0</riskcode>
+						<confidence>3</confidence>
+						<riskdesc>Informational (High)</riskdesc>
+						<confidencedesc>High</confidencedesc>
+						<desc>&lt;p&gt;The given request has been identified as an authentication request. The &apos;Other Info&apos; field contains a set of key=value lines which identify any relevant fields. If the request is in a context which has an Authentication Method set to &quot;Auto-Detect&quot; then this rule will change the authentication to match the request identified.&lt;/p&gt;</desc>
+						<instances>
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Auth/login</uri>
+									<nodeName>http://host.docker.internal:8080/api/Auth/login ()({username,password})</nodeName>
+									<method>POST</method>
+									<param>username</param>
+									<attack></attack>
+									<evidence>password</evidence>
+									<otherinfo>userParam=username
+userValue=John Doe
+passwordParam=password</otherinfo>
+								</instance>
+							
+						</instances>
+						<count>1</count>
+						<systemic>false</systemic>
+						<solution>&lt;p&gt;This is an informational alert rather than a vulnerability and so there is nothing to fix.&lt;/p&gt;</solution>
+						<otherinfo>&lt;p&gt;userParam=username&lt;/p&gt;&lt;p&gt;userValue=John Doe&lt;/p&gt;&lt;p&gt;passwordParam=password&lt;/p&gt;</otherinfo>
+						<reference>&lt;p&gt;https://www.zaproxy.org/docs/desktop/addons/authentication-helper/auth-req-id/&lt;/p&gt;</reference>
+						<cweid>-1</cweid>
+						<wascid>-1</wascid>
+						<sourceid>5</sourceid>
+					</alertitem>
+				
+				
+					<alertitem>
+						<pluginid>10049</pluginid>
+						<alertRef>10049-1</alertRef>
+						<alert>Non-Storable Content</alert>
+						<name>Non-Storable Content</name>
+						<riskcode>0</riskcode>
+						<confidence>2</confidence>
+						<riskdesc>Informational (Medium)</riskdesc>
+						<confidencedesc>Medium</confidencedesc>
+						<desc>&lt;p&gt;The response contents are not storable by caching components such as proxy servers. If the response does not contain sensitive, personal or user-specific information, it may benefit from being stored and cached, to improve performance.&lt;/p&gt;</desc>
+						<instances>
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Clientes/id</uri>
+									<nodeName>http://host.docker.internal:8080/api/Clientes/id</nodeName>
+									<method>DELETE</method>
+									<param></param>
+									<attack></attack>
+									<evidence>DELETE </evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Clientes/id</uri>
+									<nodeName>http://host.docker.internal:8080/api/Clientes/id</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>authorization:</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/swagger/v1/swagger.json</uri>
+									<nodeName>http://host.docker.internal:8080/swagger/v1/swagger.json</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>authorization:</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Auth/login</uri>
+									<nodeName>http://host.docker.internal:8080/api/Auth/login ()({username,password})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>authorization:</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/Clientes</uri>
+									<nodeName>http://host.docker.internal:8080/api/Clientes ()({nome,cpfCnpj,email,telefone})</nodeName>
+									<method>POST</method>
+									<param></param>
+									<attack></attack>
+									<evidence>authorization:</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+						</instances>
+						<count>5</count>
+						<systemic>true</systemic>
+						<solution>&lt;p&gt;The content may be marked as storable by ensuring that the following conditions are satisfied:&lt;/p&gt;&lt;p&gt;The request method must be understood by the cache and defined as being cacheable (&quot;GET&quot;, &quot;HEAD&quot;, and &quot;POST&quot; are currently defined as cacheable)&lt;/p&gt;&lt;p&gt;The response status code must be understood by the cache (one of the 1XX, 2XX, 3XX, 4XX, or 5XX response classes are generally understood)&lt;/p&gt;&lt;p&gt;The &quot;no-store&quot; cache directive must not appear in the request or response header fields&lt;/p&gt;&lt;p&gt;For caching by &quot;shared&quot; caches such as &quot;proxy&quot; caches, the &quot;private&quot; response directive must not appear in the response&lt;/p&gt;&lt;p&gt;For caching by &quot;shared&quot; caches such as &quot;proxy&quot; caches, the &quot;Authorization&quot; header field must not appear in the request, unless the response explicitly allows it (using one of the &quot;must-revalidate&quot;, &quot;public&quot;, or &quot;s-maxage&quot; Cache-Control response directives)&lt;/p&gt;&lt;p&gt;In addition to the conditions above, at least one of the following conditions must also be satisfied by the response:&lt;/p&gt;&lt;p&gt;It must contain an &quot;Expires&quot; header field&lt;/p&gt;&lt;p&gt;It must contain a &quot;max-age&quot; response directive&lt;/p&gt;&lt;p&gt;For &quot;shared&quot; caches such as &quot;proxy&quot; caches, it must contain a &quot;s-maxage&quot; response directive&lt;/p&gt;&lt;p&gt;It must contain a &quot;Cache Control Extension&quot; that allows it to be cached&lt;/p&gt;&lt;p&gt;It must have a status code that is defined as cacheable by default (200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501).&lt;/p&gt;</solution>
+						<otherinfo></otherinfo>
+						<reference>&lt;p&gt;https://datatracker.ietf.org/doc/html/rfc7234&lt;/p&gt;&lt;p&gt;https://datatracker.ietf.org/doc/html/rfc7231&lt;/p&gt;&lt;p&gt;https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html&lt;/p&gt;</reference>
+						<cweid>524</cweid>
+						<wascid>13</wascid>
+						<sourceid>13</sourceid>
+					</alertitem>
+				
+			</alerts>
+		</site>
+	
+	
+		<insights>
+			
+				<insight>
+					<level>Low</level>
+					<reason>Exceeded High</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.code.4xx</key>
+					<description>Percentage of responses with status code 4xx</description>
+					<statistic>94</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.code.2xx</key>
+					<description>Percentage of responses with status code 2xx</description>
+					<statistic>5</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.endpoint.ctype.application/json</key>
+					<description>Percentage of endpoints with content type application/json</description>
+					<statistic>13</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.endpoint.ctype.application/problem+json</key>
+					<description>Percentage of endpoints with content type application/problem+json</description>
+					<statistic>8</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.endpoint.ctype.text/html</key>
+					<description>Percentage of endpoints with content type text/html</description>
+					<statistic>2</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.endpoint.method.DELETE</key>
+					<description>Percentage of endpoints with method DELETE</description>
+					<statistic>8</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.endpoint.method.GET</key>
+					<description>Percentage of endpoints with method GET</description>
+					<statistic>45</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.endpoint.method.POST</key>
+					<description>Percentage of endpoints with method POST</description>
+					<statistic>36</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.endpoint.method.PUT</key>
+					<description>Percentage of endpoints with method PUT</description>
+					<statistic>8</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.endpoint.total</key>
+					<description>Count of total endpoints</description>
+					<statistic>90</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.response.slow</key>
+					<description>Percentage of slow responses</description>
+					<statistic>50</statistic>
+				</insight>
+			
+		</insights>
+	
+</OWASPZAPReport>

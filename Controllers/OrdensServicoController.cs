@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Api.Application.DTOs;
 using OficinaMecanica.Api.Application.Interfaces;
@@ -6,6 +7,7 @@ namespace OficinaMecanica.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class OrdensServicoController : ControllerBase
 {
     private readonly IOrdemServicoService _ordemServicoService;
@@ -22,8 +24,16 @@ public class OrdensServicoController : ControllerBase
         return Ok(_ordemServicoService.ObterTodas());
     }
 
+    [HttpGet("tempo-medio-execucao")]
+    [ProducesResponseType(typeof(TempoMedioExecucaoResponseDto), StatusCodes.Status200OK)]
+    public IActionResult GetTempoMedioExecucao()
+    {
+        return Ok(_ordemServicoService.ObterTempoMedioExecucao());
+    }
+
     [HttpGet("cliente/{cpfCnpj}")]
     [ProducesResponseType(typeof(List<OrdemServicoResponseDto>), StatusCodes.Status200OK)]
+    [AllowAnonymous]
     public IActionResult GetByCpfCnpjCliente(string cpfCnpj)
     {
         return Ok(_ordemServicoService.ObterPorCpfCnpjCliente(cpfCnpj));
@@ -77,11 +87,11 @@ public class OrdensServicoController : ControllerBase
     [ProducesResponseType(typeof(OrdemServicoResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public IActionResult EnviarOrcamento(Guid id)
+    public IActionResult EnviarOrcamento(Guid id, [FromBody] OrdemServicoOrcamentoRequestDto requestDto)
     {
         try
         {
-            var ordemServico = _ordemServicoService.EnviarOrcamento(id);
+            var ordemServico = _ordemServicoService.EnviarOrcamento(id, requestDto);
             return ordemServico is null ? NotFound() : Ok(ordemServico);
         }
         catch (InvalidOperationException ex)

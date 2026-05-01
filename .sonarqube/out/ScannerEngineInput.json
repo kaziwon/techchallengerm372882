@@ -1,0 +1,184 @@
+{
+  "scannerProperties": [
+    {
+      "key": "sonar.scanner.app",
+      "value": "ScannerMSBuild"
+    },
+    {
+      "key": "sonar.scanner.appVersion",
+      "value": "11.2.1"
+    },
+    {
+      "key": "sonar.scanner.bootstrapStartTime",
+      "value": "1777665419000"
+    },
+    {
+      "key": "sonar.projectKey",
+      "value": "oficina-mecanica-api"
+    },
+    {
+      "key": "sonar.working.directory",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/.sonarqube/out/.sonar"
+    },
+    {
+      "key": "sonar.projectBaseDir",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api"
+    },
+    {
+      "key": "sonar.pullrequest.cache.basepath",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api"
+    },
+    {
+      "key": "sonar.sources",
+      "value": ""
+    },
+    {
+      "key": "sonar.tests",
+      "value": ""
+    },
+    {
+      "key": "sonar.modules",
+      "value": "CB88FAD6-764A-CB32-5FB9-646183DD1BD8,63B0895D-2D48-42B3-B4A1-0F027F12031A,A25E9B47-6FB2-4687-B252-1268B57B46F9"
+    },
+    {
+      "key": "CB88FAD6-764A-CB32-5FB9-646183DD1BD8.sonar.projectKey",
+      "value": "oficina-mecanica-api:CB88FAD6-764A-CB32-5FB9-646183DD1BD8"
+    },
+    {
+      "key": "CB88FAD6-764A-CB32-5FB9-646183DD1BD8.sonar.projectName",
+      "value": "OficinaMecanica.Api"
+    },
+    {
+      "key": "CB88FAD6-764A-CB32-5FB9-646183DD1BD8.sonar.projectBaseDir",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api"
+    },
+    {
+      "key": "CB88FAD6-764A-CB32-5FB9-646183DD1BD8.sonar.working.directory",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/.sonarqube/out/.sonar/mod0"
+    },
+    {
+      "key": "CB88FAD6-764A-CB32-5FB9-646183DD1BD8.sonar.sourceEncoding",
+      "value": "utf-8"
+    },
+    {
+      "key": "CB88FAD6-764A-CB32-5FB9-646183DD1BD8.sonar.tests",
+      "value": ""
+    },
+    {
+      "key": "CB88FAD6-764A-CB32-5FB9-646183DD1BD8.sonar.sources",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/ClienteRequestDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/ClienteResponseDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/LoginRequestDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/LoginResponseDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/OrdemServicoItemPecaInsumoRequestDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/OrdemServicoItemPecaInsumoResponseDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/OrdemServicoItemServicoResponseDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/OrdemServicoOrcamentoRequestDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/OrdemServicoRequestDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/OrdemServicoResponseDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/OrdemServicoRespostaAprovacaoRequestDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/PecaInsumoRequestDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/PecaInsumoResponseDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/ServicoRequestDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/ServicoResponseDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/TempoMedioExecucaoResponseDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/VeiculoRequestDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/DTOs/VeiculoResponseDto.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/Interfaces/IAuthService.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/Interfaces/IClienteService.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/Interfaces/IOrdemServicoService.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/Interfaces/IPecaInsumoService.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/Interfaces/IServicoService.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/Interfaces/IVeiculoService.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/Services/AuthService.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/Services/ClienteService.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/Services/OrdemServicoService.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/Services/PecaInsumoService.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/Services/ServicoService.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/Services/VeiculoService.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/Settings/AdminUserSettings.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/Settings/JwtSettings.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/Validators/CpfCnpjAttribute.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Application/Validators/PlacaVeiculoAttribute.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Controllers/AuthController.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Controllers/ClientesController.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Controllers/OrdensServicoController.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Controllers/PecasController.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Controllers/ServicosController.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Controllers/VeiculosController.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Domain/Entities/Cliente.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Domain/Entities/OrdemServico.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Domain/Entities/OrdemServicoItemPecaInsumo.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Domain/Entities/OrdemServicoItemServico.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Domain/Entities/PecaInsumo.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Domain/Entities/Servico.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Domain/Entities/StatusAprovacaoOrcamento.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Domain/Entities/StatusOrdemServico.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Domain/Entities/Veiculo.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Domain/Repositories/IClienteRepository.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Domain/Repositories/IOrdemServicoRepository.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Domain/Repositories/IPecaInsumoRepository.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Domain/Repositories/IServicoRepository.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Domain/Repositories/IVeiculoRepository.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Infrastructure/Persistence/AppDbContext.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Infrastructure/Persistence/AppDbContextFactory.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Infrastructure/Repositories/ClienteRepository.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Infrastructure/Repositories/OrdemServicoRepository.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Infrastructure/Repositories/PecaInsumoRepository.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Infrastructure/Repositories/ServicoRepository.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Infrastructure/Repositories/VeiculoRepository.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Migrations/20260423235318_InitialCreate.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Migrations/20260423235318_InitialCreate.Designer.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Migrations/20260424002920_AddUniqueIndexToClienteCpfCnpj.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Migrations/20260424002920_AddUniqueIndexToClienteCpfCnpj.Designer.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Migrations/20260424011923_AddVeiculosServicosPecasInsumos.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Migrations/20260424011923_AddVeiculosServicosPecasInsumos.Designer.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Migrations/20260430182831_AddOrdemServico.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Migrations/20260430182831_AddOrdemServico.Designer.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Migrations/AppDbContextModelSnapshot.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Program.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/obj/Debug/net10.0/OficinaMecanica.Api.GlobalUsings.g.cs,\"/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/obj/Debug/net10.0/.NETCoreApp,Version=v10.0.AssemblyAttributes.cs\",/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/obj/Debug/net10.0/OficinaMecanica.Api.AssemblyInfo.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/obj/Debug/net10.0/OficinaMecanica.Api.MvcApplicationPartsAssemblyInfo.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/appsettings.Development.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/appsettings.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Dockerfile,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.http,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/README.md,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/scripts/sonar_scan.sh,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/Properties/launchSettings.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/obj/OficinaMecanica.Api.csproj.nuget.dgspec.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/obj/project.assets.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/obj/Debug/net10.0/staticwebassets.build.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/obj/Debug/net10.0/staticwebassets.build.endpoints.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/obj/Debug/net10.0/rjsmrazor.dswa.cache.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/obj/Debug/net10.0/rjsmcshtml.dswa.cache.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/obj/Debug/net10.0/OficinaMecanica.Api.sourcelink.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/obj/Debug/net10.0/rpswa.dswa.cache.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/bin/Debug/net10.0/OficinaMecanica.Api.staticwebassets.endpoints.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/bin/Debug/net10.0/appsettings.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/bin/Debug/net10.0/OficinaMecanica.Api.runtimeconfig.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/bin/Debug/net10.0/OficinaMecanica.Api.deps.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/bin/Debug/net10.0/appsettings.Development.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/bin/Debug/net10.0/BuildHost-net472/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe.config,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/bin/Debug/net10.0/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.deps.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/bin/Debug/net10.0/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.runtimeconfig.json"
+    },
+    {
+      "key": "CB88FAD6-764A-CB32-5FB9-646183DD1BD8.sonar.cs.analyzer.projectOutPaths",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/.sonarqube/out/0"
+    },
+    {
+      "key": "CB88FAD6-764A-CB32-5FB9-646183DD1BD8.sonar.cs.roslyn.reportFilePaths",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/.sonarqube/out/0/Issues.json"
+    },
+    {
+      "key": "CB88FAD6-764A-CB32-5FB9-646183DD1BD8.sonar.cs.scanner.telemetry",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/.sonarqube/out/0/Telemetry.json"
+    },
+    {
+      "key": "63B0895D-2D48-42B3-B4A1-0F027F12031A.sonar.projectKey",
+      "value": "oficina-mecanica-api:63B0895D-2D48-42B3-B4A1-0F027F12031A"
+    },
+    {
+      "key": "63B0895D-2D48-42B3-B4A1-0F027F12031A.sonar.projectName",
+      "value": "OficinaMecanica.Api.UnitTests"
+    },
+    {
+      "key": "63B0895D-2D48-42B3-B4A1-0F027F12031A.sonar.projectBaseDir",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests"
+    },
+    {
+      "key": "63B0895D-2D48-42B3-B4A1-0F027F12031A.sonar.working.directory",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/.sonarqube/out/.sonar/mod1"
+    },
+    {
+      "key": "63B0895D-2D48-42B3-B4A1-0F027F12031A.sonar.sourceEncoding",
+      "value": "utf-8"
+    },
+    {
+      "key": "63B0895D-2D48-42B3-B4A1-0F027F12031A.sonar.sources",
+      "value": ""
+    },
+    {
+      "key": "63B0895D-2D48-42B3-B4A1-0F027F12031A.sonar.tests",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/obj/OficinaMecanica.Api.UnitTests.csproj.nuget.dgspec.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/obj/project.assets.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/obj/Debug/net10.0/OficinaMecanica.Api.UnitTests.sourcelink.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/bin/Debug/net10.0/OficinaMecanica.Api.staticwebassets.endpoints.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/bin/Debug/net10.0/appsettings.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/bin/Debug/net10.0/OficinaMecanica.Api.runtimeconfig.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/bin/Debug/net10.0/OficinaMecanica.Api.UnitTests.deps.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/bin/Debug/net10.0/OficinaMecanica.Api.deps.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/bin/Debug/net10.0/appsettings.Development.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/bin/Debug/net10.0/OficinaMecanica.Api.UnitTests.runtimeconfig.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/AuthServiceTests.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/ClienteServiceTests.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/OrdemServicoServiceTests.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/PecaInsumoServiceTests.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/ServicoServiceTests.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/ValidatorsTests.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/VeiculoServiceTests.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/TestResults/36bcef10-045f-4fa6-b66a-e877f892a94c/coverage.cobertura.xml,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.UnitTests/TestResults/a76dac24-9484-4195-b243-5859c7460218/coverage.cobertura.xml"
+    },
+    {
+      "key": "63B0895D-2D48-42B3-B4A1-0F027F12031A.sonar.cs.analyzer.projectOutPaths",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/.sonarqube/out/1"
+    },
+    {
+      "key": "63B0895D-2D48-42B3-B4A1-0F027F12031A.sonar.cs.roslyn.reportFilePaths",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/.sonarqube/out/1/Issues.json"
+    },
+    {
+      "key": "63B0895D-2D48-42B3-B4A1-0F027F12031A.sonar.cs.scanner.telemetry",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/.sonarqube/out/1/Telemetry.json"
+    },
+    {
+      "key": "A25E9B47-6FB2-4687-B252-1268B57B46F9.sonar.projectKey",
+      "value": "oficina-mecanica-api:A25E9B47-6FB2-4687-B252-1268B57B46F9"
+    },
+    {
+      "key": "A25E9B47-6FB2-4687-B252-1268B57B46F9.sonar.projectName",
+      "value": "OficinaMecanica.Api.IntegrationTests"
+    },
+    {
+      "key": "A25E9B47-6FB2-4687-B252-1268B57B46F9.sonar.projectBaseDir",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests"
+    },
+    {
+      "key": "A25E9B47-6FB2-4687-B252-1268B57B46F9.sonar.working.directory",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/.sonarqube/out/.sonar/mod2"
+    },
+    {
+      "key": "A25E9B47-6FB2-4687-B252-1268B57B46F9.sonar.sourceEncoding",
+      "value": "utf-8"
+    },
+    {
+      "key": "A25E9B47-6FB2-4687-B252-1268B57B46F9.sonar.sources",
+      "value": ""
+    },
+    {
+      "key": "A25E9B47-6FB2-4687-B252-1268B57B46F9.sonar.tests",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/obj/OficinaMecanica.Api.IntegrationTests.csproj.nuget.dgspec.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/obj/project.assets.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/obj/Debug/net10.0/MvcTestingAppManifest.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/obj/Debug/net10.0/OficinaMecanica.Api.IntegrationTests.sourcelink.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/bin/Debug/net10.0/MvcTestingAppManifest.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/bin/Debug/net10.0/OficinaMecanica.Api.IntegrationTests.deps.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/bin/Debug/net10.0/OficinaMecanica.Api.staticwebassets.endpoints.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/bin/Debug/net10.0/appsettings.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/bin/Debug/net10.0/OficinaMecanica.Api.runtimeconfig.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/bin/Debug/net10.0/OficinaMecanica.Api.deps.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/bin/Debug/net10.0/appsettings.Development.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/bin/Debug/net10.0/OficinaMecanica.Api.IntegrationTests.runtimeconfig.json,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/AuthEndpointsTests.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/AuthTestHelper.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/ClienteEndpointsTests.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/CustomWebApplicationFactory.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/OrdemServicoEndpointsTests.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/PecaEndpointsTests.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/ServicoEndpointsTests.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/VeiculoEndpointsTests.cs,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/TestResults/2f8f233c-e6c8-4e59-b291-86c69cbd9222/coverage.cobertura.xml,/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/TestResults/601b83cd-01bb-4608-9583-db6a8561fea2/coverage.cobertura.xml"
+    },
+    {
+      "key": "A25E9B47-6FB2-4687-B252-1268B57B46F9.sonar.cs.analyzer.projectOutPaths",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/.sonarqube/out/2"
+    },
+    {
+      "key": "A25E9B47-6FB2-4687-B252-1268B57B46F9.sonar.cs.roslyn.reportFilePaths",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/.sonarqube/out/2/Issues.json"
+    },
+    {
+      "key": "A25E9B47-6FB2-4687-B252-1268B57B46F9.sonar.cs.scanner.telemetry",
+      "value": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/.sonarqube/out/2/Telemetry.json"
+    },
+    {
+      "key": "sonar.token",
+      "value": "***"
+    },
+    {
+      "key": "sonar.host.url",
+      "value": "http://localhost:9000"
+    },
+    {
+      "key": "sonar.cs.opencover.reportsPaths",
+      "value": "coverage/*.opencover.xml"
+    },
+    {
+      "key": "sonar.exclusions",
+      "value": "coverage/*.opencover.xml"
+    },
+    {
+      "key": "sonar.visualstudio.enable",
+      "value": "false"
+    }
+  ]
+}

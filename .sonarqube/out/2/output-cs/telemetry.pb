@@ -1,0 +1,1 @@
+™R‹/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/OficinaMecanica.Api.IntegrationTests.csprojòCSharp14

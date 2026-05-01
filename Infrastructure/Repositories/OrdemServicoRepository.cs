@@ -42,22 +42,39 @@ public class OrdemServicoRepository : IOrdemServicoRepository
 
     public OrdemServico? Atualizar(OrdemServico ordemServico)
     {
-        var ordemServicoExistente = _context.OrdensServico.FirstOrDefault(os => os.Id == ordemServico.Id);
+        var ordemServicoExistente = _context.OrdensServico
+            .Include(os => os.ItensServico)
+            .Include(os => os.ItensPecaInsumo)
+            .FirstOrDefault(os => os.Id == ordemServico.Id);
 
         if (ordemServicoExistente is null)
         {
             return null;
         }
 
-        ordemServicoExistente.Status = ordemServico.Status;
-        ordemServicoExistente.StatusAprovacaoOrcamento = ordemServico.StatusAprovacaoOrcamento;
-        ordemServicoExistente.EnvioOrcamento = ordemServico.EnvioOrcamento;
-        ordemServicoExistente.MotivoRecusaOrcamento = ordemServico.MotivoRecusaOrcamento;
-        ordemServicoExistente.DiagnosticoEm = ordemServico.DiagnosticoEm;
-        ordemServicoExistente.OrcamentoEnviadoEm = ordemServico.OrcamentoEnviadoEm;
-        ordemServicoExistente.ExecucaoIniciadaEm = ordemServico.ExecucaoIniciadaEm;
-        ordemServicoExistente.FinalizadaEm = ordemServico.FinalizadaEm;
-        ordemServicoExistente.EntregueEm = ordemServico.EntregueEm;
+        foreach (var itemServico in ordemServicoExistente.ItensServico)
+        {
+            var itemExiste = _context.OrdemServicoItensServico
+                .AsNoTracking()
+                .Any(item => item.Id == itemServico.Id);
+
+            if (!itemExiste)
+            {
+                _context.Entry(itemServico).State = EntityState.Added;
+            }
+        }
+
+        foreach (var itemPecaInsumo in ordemServicoExistente.ItensPecaInsumo)
+        {
+            var itemExiste = _context.OrdemServicoItensPecaInsumo
+                .AsNoTracking()
+                .Any(item => item.Id == itemPecaInsumo.Id);
+
+            if (!itemExiste)
+            {
+                _context.Entry(itemPecaInsumo).State = EntityState.Added;
+            }
+        }
 
         _context.SaveChanges();
 

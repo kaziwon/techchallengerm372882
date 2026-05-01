@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Api.Application.DTOs;
 using OficinaMecanica.Api.Application.Interfaces;
@@ -6,6 +7,7 @@ namespace OficinaMecanica.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class PecasController : ControllerBase
 {
     private readonly IPecaInsumoService _pecaInsumoService;

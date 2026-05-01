@@ -1,0 +1,14 @@
+ì
+á/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.csutf-8≤
+¶/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/obj/Debug/net10.0/OficinaMecanica.Api.IntegrationTests.AssemblyInfo.csutf-8¥
+®/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/obj/Debug/net10.0/OficinaMecanica.Api.IntegrationTests.GlobalUsings.g.csutf-8≠
+°/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/obj/Debug/net10.0/.NETCoreApp,Version=v10.0.AssemblyAttributes.csutf-8w
+l/Users/jcabral/.nuget/packages/microsoft.net.test.sdk/17.14.1/build/net8.0/Microsoft.NET.Test.Sdk.Program.csutf-8Å
+x/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/VeiculoEndpointsTests.csutf-8Å
+x/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/ServicoEndpointsTests.csutf-8Å
+x/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/ClienteEndpointsTests.csutf-8z
+q/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/AuthTestHelper.csutf-8~
+u/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/PecaEndpointsTests.csutf-8á
+~/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/CustomWebApplicationFactory.csutf-8Ü
+}/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/OrdemServicoEndpointsTests.csutf-8~
+u/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/AuthEndpointsTests.csutf-8

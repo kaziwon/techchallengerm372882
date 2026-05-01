@@ -12,6 +12,7 @@ public class OrdemServicoEndpointsTests
     {
         await using var factory = new CustomWebApplicationFactory();
         using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
 
         var cliente = await CriarCliente(client);
         var servico = await CriarServico(client);
@@ -21,16 +22,7 @@ public class OrdemServicoEndpointsTests
         var response = await client.PostAsJsonAsync("/api/ordensservico", new OrdemServicoRequestDto
         {
             CpfCnpj = cliente.CpfCnpj,
-            VeiculoId = veiculo.Id,
-            ServicoIds = [servico.Id],
-            PecasInsumos =
-            [
-                new OrdemServicoItemPecaInsumoRequestDto
-                {
-                    PecaInsumoId = peca.Id,
-                    Quantidade = 2
-                }
-            ]
+            VeiculoId = veiculo.Id
         });
         var responseContent = await response.Content.ReadAsStringAsync();
         var ordem = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>();
@@ -39,6 +31,11 @@ public class OrdemServicoEndpointsTests
         Assert.NotNull(ordem);
         Assert.Equal(StatusOrdemServico.Recebida, ordem.Status);
         Assert.Contains("\"status\":\"Recebida\"", responseContent);
+        Assert.Empty(ordem.ItensServico);
+        Assert.Empty(ordem.ItensPecaInsumo);
+        Assert.Equal(0m, ordem.ValorTotalServicos);
+        Assert.Equal(0m, ordem.ValorTotalPecasInsumos);
+        Assert.Equal(0m, ordem.ValorTotalOrcamento);
         Assert.Equal(string.Empty, ordem.EnvioOrcamento);
     }
 
@@ -47,12 +44,13 @@ public class OrdemServicoEndpointsTests
     {
         await using var factory = new CustomWebApplicationFactory();
         using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
 
         var cliente = await CriarCliente(client);
         var servico = await CriarServico(client);
         var peca = await CriarPeca(client);
         var veiculo = await CriarVeiculo(client, cliente.Id);
-        var ordem = await CriarOrdemServico(client, cliente, veiculo, servico, peca);
+        var ordem = await CriarOrdemServico(client, cliente, veiculo);
 
         var response = await client.PostAsync($"/api/ordensservico/{ordem.Id}/iniciar-diagnostico", null);
         var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>();
@@ -67,22 +65,43 @@ public class OrdemServicoEndpointsTests
     {
         await using var factory = new CustomWebApplicationFactory();
         using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
 
         var cliente = await CriarCliente(client);
         var servico = await CriarServico(client);
         var peca = await CriarPeca(client);
         var veiculo = await CriarVeiculo(client, cliente.Id);
-        var ordem = await CriarOrdemServico(client, cliente, veiculo, servico, peca);
+        var ordem = await CriarOrdemServico(client, cliente, veiculo);
 
         await client.PostAsync($"/api/ordensservico/{ordem.Id}/iniciar-diagnostico", null);
 
-        var response = await client.PostAsync($"/api/ordensservico/{ordem.Id}/enviar-orcamento", null);
+        var response = await EnviarOrcamento(client, ordem.Id, servico.Id, peca.Id);
         var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(ordemAtualizada);
         Assert.Equal(StatusOrdemServico.AguardandoAprovacao, ordemAtualizada.Status);
+        Assert.Single(ordemAtualizada.ItensServico);
+        Assert.Single(ordemAtualizada.ItensPecaInsumo);
         Assert.Contains("Orcamento enviado", ordemAtualizada.EnvioOrcamento);
+    }
+
+    [Fact]
+    public async Task EnviarOrcamento_DeveRetornarConflict_QuandoOrdemNaoEstiverEmDiagnostico()
+    {
+        await using var factory = new CustomWebApplicationFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
+
+        var cliente = await CriarCliente(client);
+        var servico = await CriarServico(client);
+        var peca = await CriarPeca(client);
+        var veiculo = await CriarVeiculo(client, cliente.Id);
+        var ordem = await CriarOrdemServico(client, cliente, veiculo);
+
+        var response = await EnviarOrcamento(client, ordem.Id, servico.Id, peca.Id);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
 
     [Fact]
@@ -90,15 +109,16 @@ public class OrdemServicoEndpointsTests
     {
         await using var factory = new CustomWebApplicationFactory();
         using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
 
         var cliente = await CriarCliente(client);
         var servico = await CriarServico(client);
         var peca = await CriarPeca(client);
         var veiculo = await CriarVeiculo(client, cliente.Id);
-        var ordem = await CriarOrdemServico(client, cliente, veiculo, servico, peca);
+        var ordem = await CriarOrdemServico(client, cliente, veiculo);
 
         await client.PostAsync($"/api/ordensservico/{ordem.Id}/iniciar-diagnostico", null);
-        await client.PostAsync($"/api/ordensservico/{ordem.Id}/enviar-orcamento", null);
+        await EnviarOrcamento(client, ordem.Id, servico.Id, peca.Id);
 
         var response = await client.PostAsync($"/api/ordensservico/{ordem.Id}/aprovar-orcamento", null);
         var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>();
@@ -110,19 +130,41 @@ public class OrdemServicoEndpointsTests
     }
 
     [Fact]
+    public async Task AprovarOrcamento_DeveRetornarConflict_QuandoEstoqueForInsuficiente()
+    {
+        await using var factory = new CustomWebApplicationFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
+
+        var cliente = await CriarCliente(client);
+        var servico = await CriarServico(client);
+        var peca = await CriarPeca(client, 0);
+        var veiculo = await CriarVeiculo(client, cliente.Id);
+        var ordem = await CriarOrdemServico(client, cliente, veiculo);
+
+        await client.PostAsync($"/api/ordensservico/{ordem.Id}/iniciar-diagnostico", null);
+        await EnviarOrcamento(client, ordem.Id, servico.Id, peca.Id);
+
+        var response = await client.PostAsync($"/api/ordensservico/{ordem.Id}/aprovar-orcamento", null);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
     public async Task RecusarOrcamento_DeveVoltarParaDiagnostico()
     {
         await using var factory = new CustomWebApplicationFactory();
         using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
 
         var cliente = await CriarCliente(client);
         var servico = await CriarServico(client);
         var peca = await CriarPeca(client);
         var veiculo = await CriarVeiculo(client, cliente.Id);
-        var ordem = await CriarOrdemServico(client, cliente, veiculo, servico, peca);
+        var ordem = await CriarOrdemServico(client, cliente, veiculo);
 
         await client.PostAsync($"/api/ordensservico/{ordem.Id}/iniciar-diagnostico", null);
-        await client.PostAsync($"/api/ordensservico/{ordem.Id}/enviar-orcamento", null);
+        await EnviarOrcamento(client, ordem.Id, servico.Id, peca.Id);
 
         var response = await client.PostAsJsonAsync($"/api/ordensservico/{ordem.Id}/recusar-orcamento", new OrdemServicoRespostaAprovacaoRequestDto
         {
@@ -141,15 +183,16 @@ public class OrdemServicoEndpointsTests
     {
         await using var factory = new CustomWebApplicationFactory();
         using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
 
         var cliente = await CriarCliente(client);
         var servico = await CriarServico(client);
         var peca = await CriarPeca(client);
         var veiculo = await CriarVeiculo(client, cliente.Id);
-        var ordem = await CriarOrdemServico(client, cliente, veiculo, servico, peca);
+        var ordem = await CriarOrdemServico(client, cliente, veiculo);
 
         await client.PostAsync($"/api/ordensservico/{ordem.Id}/iniciar-diagnostico", null);
-        await client.PostAsync($"/api/ordensservico/{ordem.Id}/enviar-orcamento", null);
+        await EnviarOrcamento(client, ordem.Id, servico.Id, peca.Id);
         await client.PostAsync($"/api/ordensservico/{ordem.Id}/aprovar-orcamento", null);
 
         var response = await client.PostAsync($"/api/ordensservico/{ordem.Id}/cancelar", null);
@@ -161,16 +204,67 @@ public class OrdemServicoEndpointsTests
     }
 
     [Fact]
-    public async Task GetPorCpfCnpjCliente_DeveRetornarOrdensDoCliente()
+    public async Task Cancelar_DeveRetornarConflict_QuandoOrdemJaEstiverFinalizada()
     {
         await using var factory = new CustomWebApplicationFactory();
         using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
 
         var cliente = await CriarCliente(client);
         var servico = await CriarServico(client);
         var peca = await CriarPeca(client);
         var veiculo = await CriarVeiculo(client, cliente.Id);
-        await CriarOrdemServico(client, cliente, veiculo, servico, peca);
+        var ordem = await CriarOrdemServico(client, cliente, veiculo);
+
+        await client.PostAsync($"/api/ordensservico/{ordem.Id}/iniciar-diagnostico", null);
+        await EnviarOrcamento(client, ordem.Id, servico.Id, peca.Id);
+        await client.PostAsync($"/api/ordensservico/{ordem.Id}/aprovar-orcamento", null);
+        await client.PostAsync($"/api/ordensservico/{ordem.Id}/finalizar", null);
+
+        var response = await client.PostAsync($"/api/ordensservico/{ordem.Id}/cancelar", null);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Entregar_DeveAlterarStatusParaEntregue()
+    {
+        await using var factory = new CustomWebApplicationFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
+
+        var cliente = await CriarCliente(client);
+        var servico = await CriarServico(client);
+        var peca = await CriarPeca(client);
+        var veiculo = await CriarVeiculo(client, cliente.Id);
+        var ordem = await CriarOrdemServico(client, cliente, veiculo);
+
+        await client.PostAsync($"/api/ordensservico/{ordem.Id}/iniciar-diagnostico", null);
+        await EnviarOrcamento(client, ordem.Id, servico.Id, peca.Id);
+        await client.PostAsync($"/api/ordensservico/{ordem.Id}/aprovar-orcamento", null);
+        await client.PostAsync($"/api/ordensservico/{ordem.Id}/finalizar", null);
+
+        var response = await client.PostAsync($"/api/ordensservico/{ordem.Id}/entregar", null);
+        var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(ordemAtualizada);
+        Assert.Equal(StatusOrdemServico.Entregue, ordemAtualizada.Status);
+    }
+
+    [Fact]
+    public async Task GetPorCpfCnpjCliente_DeveRetornarOrdensDoCliente()
+    {
+        await using var factory = new CustomWebApplicationFactory();
+        using var adminClient = factory.CreateClient();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(adminClient);
+
+        var cliente = await CriarCliente(adminClient);
+        var servico = await CriarServico(adminClient);
+        var peca = await CriarPeca(adminClient);
+        var veiculo = await CriarVeiculo(adminClient, cliente.Id);
+        await CriarOrdemServico(adminClient, cliente, veiculo);
 
         var response = await client.GetAsync($"/api/ordensservico/cliente/{cliente.CpfCnpj}");
         var ordens = await response.Content.ReadFromJsonAsync<List<OrdemServicoResponseDto>>();
@@ -179,6 +273,45 @@ public class OrdemServicoEndpointsTests
         Assert.NotNull(ordens);
         Assert.NotEmpty(ordens);
         Assert.All(ordens, ordem => Assert.Equal(cliente.CpfCnpj, ordem.ClienteCpfCnpj));
+    }
+
+    [Fact]
+    public async Task GetTempoMedioExecucao_DeveRetornarMetricaDasOrdensFinalizadas()
+    {
+        await using var factory = new CustomWebApplicationFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
+
+        var cliente = await CriarCliente(client);
+        var servico = await CriarServico(client);
+        var peca = await CriarPeca(client);
+        var veiculo = await CriarVeiculo(client, cliente.Id);
+        var ordem = await CriarOrdemServico(client, cliente, veiculo);
+
+        await client.PostAsync($"/api/ordensservico/{ordem.Id}/iniciar-diagnostico", null);
+        await EnviarOrcamento(client, ordem.Id, servico.Id, peca.Id);
+        await client.PostAsync($"/api/ordensservico/{ordem.Id}/aprovar-orcamento", null);
+        await client.PostAsync($"/api/ordensservico/{ordem.Id}/finalizar", null);
+
+        var response = await client.GetAsync("/api/ordensservico/tempo-medio-execucao");
+        var metrica = await response.Content.ReadFromJsonAsync<TempoMedioExecucaoResponseDto>();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(metrica);
+        Assert.Equal(1, metrica.QuantidadeOrdensConsideradas);
+        Assert.True(metrica.TempoMedioExecucaoEmMinutos >= 0);
+    }
+
+    [Fact]
+    public async Task GetById_DeveRetornarNotFound_QuandoOrdemNaoExistir()
+    {
+        await using var factory = new CustomWebApplicationFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
+
+        var response = await client.GetAsync($"/api/ordensservico/{Guid.NewGuid()}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     private static async Task<ClienteResponseDto> CriarCliente(HttpClient client)
@@ -206,14 +339,14 @@ public class OrdemServicoEndpointsTests
         return (await response.Content.ReadFromJsonAsync<ServicoResponseDto>())!;
     }
 
-    private static async Task<PecaInsumoResponseDto> CriarPeca(HttpClient client)
+    private static async Task<PecaInsumoResponseDto> CriarPeca(HttpClient client, int quantidadeEstoque = 10)
     {
         var response = await client.PostAsJsonAsync("/api/pecas", new PecaInsumoRequestDto
         {
             Nome = $"Peca-{Guid.NewGuid():N}",
             Descricao = "Peca de teste",
             PrecoUnitario = 30m,
-            QuantidadeEstoque = 10
+            QuantidadeEstoque = quantidadeEstoque
         });
 
         return (await response.Content.ReadFromJsonAsync<PecaInsumoResponseDto>())!;
@@ -236,25 +369,30 @@ public class OrdemServicoEndpointsTests
     private static async Task<OrdemServicoResponseDto> CriarOrdemServico(
         HttpClient client,
         ClienteResponseDto cliente,
-        VeiculoResponseDto veiculo,
-        ServicoResponseDto servico,
-        PecaInsumoResponseDto peca)
+        VeiculoResponseDto veiculo)
     {
         var response = await client.PostAsJsonAsync("/api/ordensservico", new OrdemServicoRequestDto
         {
             CpfCnpj = cliente.CpfCnpj,
-            VeiculoId = veiculo.Id,
-            ServicoIds = [servico.Id],
+            VeiculoId = veiculo.Id
+        });
+
+        return (await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>())!;
+    }
+
+    private static Task<HttpResponseMessage> EnviarOrcamento(HttpClient client, Guid ordemServicoId, Guid servicoId, Guid pecaInsumoId)
+    {
+        return client.PostAsJsonAsync($"/api/ordensservico/{ordemServicoId}/enviar-orcamento", new OrdemServicoOrcamentoRequestDto
+        {
+            ServicoIds = [servicoId],
             PecasInsumos =
             [
                 new OrdemServicoItemPecaInsumoRequestDto
                 {
-                    PecaInsumoId = peca.Id,
+                    PecaInsumoId = pecaInsumoId,
                     Quantidade = 1
                 }
             ]
         });
-
-        return (await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>())!;
     }
 }

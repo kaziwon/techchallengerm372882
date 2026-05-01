@@ -11,6 +11,7 @@ public class ClienteEndpointsTests
     {
         await using var factory = new CustomWebApplicationFactory();
         using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
 
         var response = await client.GetAsync("/api/clientes");
 
@@ -22,6 +23,7 @@ public class ClienteEndpointsTests
     {
         await using var factory = new CustomWebApplicationFactory();
         using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
         var request = CriarRequest();
 
         var response = await client.PostAsJsonAsync("/api/clientes", request);
@@ -37,6 +39,7 @@ public class ClienteEndpointsTests
     {
         await using var factory = new CustomWebApplicationFactory();
         using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
         var request = new ClienteRequestDto
         {
             Nome = "Joao Silva",
@@ -55,6 +58,7 @@ public class ClienteEndpointsTests
     {
         await using var factory = new CustomWebApplicationFactory();
         using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
         var request = CriarRequest();
 
         await client.PostAsJsonAsync("/api/clientes", request);
@@ -68,6 +72,7 @@ public class ClienteEndpointsTests
     {
         await using var factory = new CustomWebApplicationFactory();
         using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
         var request = CriarRequest();
         var createResponse = await client.PostAsJsonAsync("/api/clientes", request);
         var clienteCriado = await createResponse.Content.ReadFromJsonAsync<ClienteResponseDto>();
@@ -92,6 +97,7 @@ public class ClienteEndpointsTests
     {
         await using var factory = new CustomWebApplicationFactory();
         using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
         var request = CriarRequest();
         var createResponse = await client.PostAsJsonAsync("/api/clientes", request);
         var clienteCriado = await createResponse.Content.ReadFromJsonAsync<ClienteResponseDto>();

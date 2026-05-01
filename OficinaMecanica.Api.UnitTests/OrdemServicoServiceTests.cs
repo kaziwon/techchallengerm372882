@@ -8,7 +8,85 @@ namespace OficinaMecanica.Api.UnitTests;
 public class OrdemServicoServiceTests
 {
     [Fact]
-    public void Criar_DeveGerarOrcamentoEIniciarComoRecebida()
+    public void Criar_DeveLancarExcecao_QuandoClienteNaoExistir()
+    {
+        var service = new OrdemServicoService(
+            new FakeOrdemServicoRepository(),
+            new FakeClienteRepositoryOrdem(),
+            new FakeVeiculoRepositoryOrdem(),
+            new FakeServicoRepositoryOrdem(),
+            new FakePecaInsumoRepository());
+
+        Assert.Throws<InvalidOperationException>(() => service.Criar(new OrdemServicoRequestDto
+        {
+            CpfCnpj = "39053344705",
+            VeiculoId = Guid.NewGuid()
+        }));
+    }
+
+    [Fact]
+    public void Criar_DeveLancarExcecao_QuandoVeiculoNaoExistir()
+    {
+        var cliente = new Cliente
+        {
+            Id = Guid.NewGuid(),
+            Nome = "Carlos Mendes",
+            CpfCnpj = "39053344705"
+        };
+        var clienteRepository = new FakeClienteRepositoryOrdem();
+        clienteRepository.Clientes.Add(cliente);
+        var service = new OrdemServicoService(
+            new FakeOrdemServicoRepository(),
+            clienteRepository,
+            new FakeVeiculoRepositoryOrdem(),
+            new FakeServicoRepositoryOrdem(),
+            new FakePecaInsumoRepository());
+
+        Assert.Throws<InvalidOperationException>(() => service.Criar(new OrdemServicoRequestDto
+        {
+            CpfCnpj = cliente.CpfCnpj,
+            VeiculoId = Guid.NewGuid()
+        }));
+    }
+
+    [Fact]
+    public void Criar_DeveLancarExcecao_QuandoVeiculoNaoPertencerAoCliente()
+    {
+        var cliente = new Cliente
+        {
+            Id = Guid.NewGuid(),
+            Nome = "Carlos Mendes",
+            CpfCnpj = "39053344705"
+        };
+        var veiculo = new Veiculo
+        {
+            Id = Guid.NewGuid(),
+            ClienteId = Guid.NewGuid(),
+            Placa = "BRA2E19",
+            Marca = "Toyota",
+            Modelo = "Corolla",
+            Ano = 2022
+        };
+        var clienteRepository = new FakeClienteRepositoryOrdem();
+        clienteRepository.Clientes.Add(cliente);
+        var veiculoRepository = new FakeVeiculoRepositoryOrdem();
+        veiculoRepository.Veiculos.Add(veiculo);
+        var service = new OrdemServicoService(
+            new FakeOrdemServicoRepository(),
+            clienteRepository,
+            veiculoRepository,
+            new FakeServicoRepositoryOrdem(),
+            new FakePecaInsumoRepository());
+
+        Assert.Throws<InvalidOperationException>(() => service.Criar(new OrdemServicoRequestDto
+        {
+            CpfCnpj = cliente.CpfCnpj,
+            VeiculoId = veiculo.Id
+        }));
+    }
+
+    [Fact]
+    public void Criar_DeveIniciarComoRecebidaESemOrcamento()
     {
         var cliente = new Cliente
         {
@@ -48,23 +126,14 @@ public class OrdemServicoServiceTests
         var response = service.Criar(new OrdemServicoRequestDto
         {
             CpfCnpj = cliente.CpfCnpj,
-            VeiculoId = veiculo.Id,
-            ServicoIds = [servico.Id],
-            PecasInsumos =
-            [
-                new OrdemServicoItemPecaInsumoRequestDto
-                {
-                    PecaInsumoId = peca.Id,
-                    Quantidade = 2
-                }
-            ]
+            VeiculoId = veiculo.Id
         });
 
         Assert.Equal(StatusOrdemServico.Recebida, response.Status);
         Assert.Equal(StatusAprovacaoOrcamento.Pendente, response.StatusAprovacaoOrcamento);
-        Assert.Equal(150m, response.ValorTotalServicos);
-        Assert.Equal(70m, response.ValorTotalPecasInsumos);
-        Assert.Equal(220m, response.ValorTotalOrcamento);
+        Assert.Equal(0m, response.ValorTotalServicos);
+        Assert.Equal(0m, response.ValorTotalPecasInsumos);
+        Assert.Equal(0m, response.ValorTotalOrcamento);
         Assert.Equal(string.Empty, response.EnvioOrcamento);
     }
 
@@ -78,12 +147,72 @@ public class OrdemServicoServiceTests
             CpfCnpj = "39053344705",
             Email = "carlos@email.com"
         };
+        var servico = new Servico
+        {
+            Id = Guid.NewGuid(),
+            Nome = "Troca de oleo",
+            Descricao = "Troca",
+            Preco = 150m
+        };
+        var peca = new PecaInsumo
+        {
+            Id = Guid.NewGuid(),
+            Nome = "Filtro",
+            Descricao = "Filtro de oleo",
+            PrecoUnitario = 35m,
+            QuantidadeEstoque = 10
+        };
         var ordem = new OrdemServico
         {
             Id = Guid.NewGuid(),
             Status = StatusOrdemServico.EmDiagnostico,
             StatusAprovacaoOrcamento = StatusAprovacaoOrcamento.Pendente,
             Cliente = cliente
+        };
+        var ordemRepository = new FakeOrdemServicoRepository();
+        ordemRepository.OrdensServico.Add(ordem);
+        var servicoRepository = new FakeServicoRepositoryOrdem();
+        servicoRepository.Servicos.Add(servico);
+        var pecaRepository = new FakePecaInsumoRepository();
+        pecaRepository.Pecas.Add(peca);
+        var service = new OrdemServicoService(
+            ordemRepository,
+            new FakeClienteRepositoryOrdem(),
+            new FakeVeiculoRepositoryOrdem(),
+            servicoRepository,
+            pecaRepository);
+
+        var response = service.EnviarOrcamento(ordem.Id, new OrdemServicoOrcamentoRequestDto
+        {
+            ServicoIds = [servico.Id],
+            PecasInsumos =
+            [
+                new OrdemServicoItemPecaInsumoRequestDto
+                {
+                    PecaInsumoId = peca.Id,
+                    Quantidade = 2
+                }
+            ]
+        });
+
+        Assert.NotNull(response);
+        Assert.Equal(StatusOrdemServico.AguardandoAprovacao, response.Status);
+        Assert.Equal(150m, response.ValorTotalServicos);
+        Assert.Equal(70m, response.ValorTotalPecasInsumos);
+        Assert.Equal(220m, response.ValorTotalOrcamento);
+        Assert.Single(response.ItensServico);
+        Assert.Single(response.ItensPecaInsumo);
+        Assert.Contains("Orcamento enviado", response.EnvioOrcamento);
+    }
+
+    [Fact]
+    public void EnviarOrcamento_DeveLancarExcecao_QuandoOrdemNaoEstiverEmDiagnostico()
+    {
+        var ordem = new OrdemServico
+        {
+            Id = Guid.NewGuid(),
+            Status = StatusOrdemServico.Recebida,
+            StatusAprovacaoOrcamento = StatusAprovacaoOrcamento.Pendente
         };
         var ordemRepository = new FakeOrdemServicoRepository();
         ordemRepository.OrdensServico.Add(ordem);
@@ -94,11 +223,7 @@ public class OrdemServicoServiceTests
             new FakeServicoRepositoryOrdem(),
             new FakePecaInsumoRepository());
 
-        var response = service.EnviarOrcamento(ordem.Id);
-
-        Assert.NotNull(response);
-        Assert.Equal(StatusOrdemServico.AguardandoAprovacao, response.Status);
-        Assert.Contains("Orcamento enviado", response.EnvioOrcamento);
+        Assert.Throws<InvalidOperationException>(() => service.EnviarOrcamento(ordem.Id, new OrdemServicoOrcamentoRequestDto()));
     }
 
     [Fact]
@@ -166,6 +291,50 @@ public class OrdemServicoServiceTests
         Assert.Equal(StatusOrdemServico.EmExecucao, response.Status);
         Assert.Equal(StatusAprovacaoOrcamento.Aprovado, response.StatusAprovacaoOrcamento);
         Assert.Equal(8, pecaRepository.Pecas[0].QuantidadeEstoque);
+    }
+
+    [Fact]
+    public void AprovarOrcamento_DeveLancarExcecao_QuandoEstoqueForInsuficiente()
+    {
+        var peca = new PecaInsumo
+        {
+            Id = Guid.NewGuid(),
+            Nome = "Filtro",
+            PrecoUnitario = 35m,
+            QuantidadeEstoque = 1
+        };
+        var ordem = new OrdemServico
+        {
+            Id = Guid.NewGuid(),
+            Status = StatusOrdemServico.AguardandoAprovacao,
+            StatusAprovacaoOrcamento = StatusAprovacaoOrcamento.Pendente,
+            ItensPecaInsumo =
+            [
+                new OrdemServicoItemPecaInsumo
+                {
+                    Id = Guid.NewGuid(),
+                    OrdemServicoId = Guid.NewGuid(),
+                    PecaInsumoId = peca.Id,
+                    NomePecaInsumo = peca.Nome,
+                    PrecoUnitario = peca.PrecoUnitario,
+                    Quantidade = 2,
+                    Subtotal = 70m
+                }
+            ]
+        };
+
+        var ordemRepository = new FakeOrdemServicoRepository();
+        ordemRepository.OrdensServico.Add(ordem);
+        var pecaRepository = new FakePecaInsumoRepository();
+        pecaRepository.Pecas.Add(peca);
+        var service = new OrdemServicoService(
+            ordemRepository,
+            new FakeClienteRepositoryOrdem(),
+            new FakeVeiculoRepositoryOrdem(),
+            new FakeServicoRepositoryOrdem(),
+            pecaRepository);
+
+        Assert.Throws<InvalidOperationException>(() => service.AprovarOrcamento(ordem.Id));
     }
 
     [Fact]
@@ -288,6 +457,26 @@ public class OrdemServicoServiceTests
     }
 
     [Fact]
+    public void Cancelar_DeveLancarExcecao_QuandoOrdemJaEstiverFinalizada()
+    {
+        var ordem = new OrdemServico
+        {
+            Id = Guid.NewGuid(),
+            Status = StatusOrdemServico.Finalizada
+        };
+        var ordemRepository = new FakeOrdemServicoRepository();
+        ordemRepository.OrdensServico.Add(ordem);
+        var service = new OrdemServicoService(
+            ordemRepository,
+            new FakeClienteRepositoryOrdem(),
+            new FakeVeiculoRepositoryOrdem(),
+            new FakeServicoRepositoryOrdem(),
+            new FakePecaInsumoRepository());
+
+        Assert.Throws<InvalidOperationException>(() => service.Cancelar(ordem.Id));
+    }
+
+    [Fact]
     public void Finalizar_DeveLancarExcecao_QuandoOrdemNaoEstiverEmExecucao()
     {
         var ordem = new OrdemServico
@@ -305,6 +494,54 @@ public class OrdemServicoServiceTests
             new FakePecaInsumoRepository());
 
         Assert.Throws<InvalidOperationException>(() => service.Finalizar(ordem.Id));
+    }
+
+    [Fact]
+    public void Finalizar_DeveAlterarStatusParaFinalizada()
+    {
+        var ordem = new OrdemServico
+        {
+            Id = Guid.NewGuid(),
+            Status = StatusOrdemServico.EmExecucao
+        };
+        var ordemRepository = new FakeOrdemServicoRepository();
+        ordemRepository.OrdensServico.Add(ordem);
+        var service = new OrdemServicoService(
+            ordemRepository,
+            new FakeClienteRepositoryOrdem(),
+            new FakeVeiculoRepositoryOrdem(),
+            new FakeServicoRepositoryOrdem(),
+            new FakePecaInsumoRepository());
+
+        var response = service.Finalizar(ordem.Id);
+
+        Assert.NotNull(response);
+        Assert.Equal(StatusOrdemServico.Finalizada, response.Status);
+        Assert.NotNull(response.FinalizadaEm);
+    }
+
+    [Fact]
+    public void Entregar_DeveAlterarStatusParaEntregue()
+    {
+        var ordem = new OrdemServico
+        {
+            Id = Guid.NewGuid(),
+            Status = StatusOrdemServico.Finalizada
+        };
+        var ordemRepository = new FakeOrdemServicoRepository();
+        ordemRepository.OrdensServico.Add(ordem);
+        var service = new OrdemServicoService(
+            ordemRepository,
+            new FakeClienteRepositoryOrdem(),
+            new FakeVeiculoRepositoryOrdem(),
+            new FakeServicoRepositoryOrdem(),
+            new FakePecaInsumoRepository());
+
+        var response = service.Entregar(ordem.Id);
+
+        Assert.NotNull(response);
+        Assert.Equal(StatusOrdemServico.Entregue, response.Status);
+        Assert.NotNull(response.EntregueEm);
     }
 
     [Fact]
@@ -346,6 +583,54 @@ public class OrdemServicoServiceTests
 
         Assert.Single(response);
         Assert.Equal(ordem.Id, response[0].Id);
+    }
+
+    [Fact]
+    public void ObterTempoMedioExecucao_DeveCalcularMediaDasOrdensFinalizadas()
+    {
+        var agora = DateTime.UtcNow;
+        var ordemRepository = new FakeOrdemServicoRepository();
+        ordemRepository.OrdensServico.Add(new OrdemServico
+        {
+            Id = Guid.NewGuid(),
+            ExecucaoIniciadaEm = agora,
+            FinalizadaEm = agora.AddMinutes(30)
+        });
+        ordemRepository.OrdensServico.Add(new OrdemServico
+        {
+            Id = Guid.NewGuid(),
+            ExecucaoIniciadaEm = agora,
+            FinalizadaEm = agora.AddMinutes(90)
+        });
+        var service = new OrdemServicoService(
+            ordemRepository,
+            new FakeClienteRepositoryOrdem(),
+            new FakeVeiculoRepositoryOrdem(),
+            new FakeServicoRepositoryOrdem(),
+            new FakePecaInsumoRepository());
+
+        var response = service.ObterTempoMedioExecucao();
+
+        Assert.Equal(2, response.QuantidadeOrdensConsideradas);
+        Assert.Equal(60, response.TempoMedioExecucaoEmMinutos);
+        Assert.Equal("01:00:00", response.TempoMedioExecucaoFormatado);
+    }
+
+    [Fact]
+    public void ObterTempoMedioExecucao_DeveRetornarZero_QuandoNaoHouverOrdensFinalizadas()
+    {
+        var service = new OrdemServicoService(
+            new FakeOrdemServicoRepository(),
+            new FakeClienteRepositoryOrdem(),
+            new FakeVeiculoRepositoryOrdem(),
+            new FakeServicoRepositoryOrdem(),
+            new FakePecaInsumoRepository());
+
+        var response = service.ObterTempoMedioExecucao();
+
+        Assert.Equal(0, response.QuantidadeOrdensConsideradas);
+        Assert.Equal(0, response.TempoMedioExecucaoEmMinutos);
+        Assert.Equal("00:00:00", response.TempoMedioExecucaoFormatado);
     }
 
     private static OrdemServicoService CriarService(Cliente cliente, Veiculo veiculo, Servico servico, PecaInsumo peca)
