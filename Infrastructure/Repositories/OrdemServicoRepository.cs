@@ -51,7 +51,7 @@ public class OrdemServicoRepository : IOrdemServicoRepository
 
         ordemServicoExistente.Status = ordemServico.Status;
         ordemServicoExistente.StatusAprovacaoOrcamento = ordemServico.StatusAprovacaoOrcamento;
-        ordemServicoExistente.MockEnvioOrcamento = ordemServico.MockEnvioOrcamento;
+        ordemServicoExistente.EnvioOrcamento = ordemServico.EnvioOrcamento;
         ordemServicoExistente.MotivoRecusaOrcamento = ordemServico.MotivoRecusaOrcamento;
         ordemServicoExistente.DiagnosticoEm = ordemServico.DiagnosticoEm;
         ordemServicoExistente.OrcamentoEnviadoEm = ordemServico.OrcamentoEnviadoEm;

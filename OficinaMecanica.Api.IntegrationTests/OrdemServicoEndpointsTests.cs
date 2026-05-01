@@ -39,7 +39,7 @@ public class OrdemServicoEndpointsTests
         Assert.NotNull(ordem);
         Assert.Equal(StatusOrdemServico.Recebida, ordem.Status);
         Assert.Contains("\"status\":\"Recebida\"", responseContent);
-        Assert.Equal(string.Empty, ordem.MockEnvioOrcamento);
+        Assert.Equal(string.Empty, ordem.EnvioOrcamento);
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public class OrdemServicoEndpointsTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(ordemAtualizada);
         Assert.Equal(StatusOrdemServico.AguardandoAprovacao, ordemAtualizada.Status);
-        Assert.Contains("Mock de envio de orcamento", ordemAtualizada.MockEnvioOrcamento);
+        Assert.Contains("Orcamento enviado", ordemAtualizada.EnvioOrcamento);
     }
 
     [Fact]

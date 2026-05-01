@@ -65,7 +65,7 @@ public class OrdemServicoServiceTests
         Assert.Equal(150m, response.ValorTotalServicos);
         Assert.Equal(70m, response.ValorTotalPecasInsumos);
         Assert.Equal(220m, response.ValorTotalOrcamento);
-        Assert.Equal(string.Empty, response.MockEnvioOrcamento);
+        Assert.Equal(string.Empty, response.EnvioOrcamento);
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public class OrdemServicoServiceTests
 
         Assert.NotNull(response);
         Assert.Equal(StatusOrdemServico.AguardandoAprovacao, response.Status);
-        Assert.Contains("Mock de envio de orcamento", response.MockEnvioOrcamento);
+        Assert.Contains("Orcamento enviado", response.EnvioOrcamento);
     }
 
     [Fact]

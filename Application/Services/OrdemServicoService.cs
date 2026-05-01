@@ -146,7 +146,7 @@ public class OrdemServicoService : IOrdemServicoService
             ValorTotalServicos = valorTotalServicos,
             ValorTotalPecasInsumos = valorTotalPecasInsumos,
             ValorTotalOrcamento = valorTotalOrcamento,
-            MockEnvioOrcamento = string.Empty,
+            EnvioOrcamento = string.Empty,
             CriadaEm = agora,
             ItensServico = itensServico,
             ItensPecaInsumo = itensPecaInsumo
@@ -204,7 +204,7 @@ public class OrdemServicoService : IOrdemServicoService
         ordemServico.Status = StatusOrdemServico.AguardandoAprovacao;
         ordemServico.StatusAprovacaoOrcamento = StatusAprovacaoOrcamento.Pendente;
         ordemServico.OrcamentoEnviadoEm = agora;
-        ordemServico.MockEnvioOrcamento = $"Mock de envio de orcamento para {ordemServico.Cliente?.Email} em {agora:O}";
+        ordemServico.EnvioOrcamento = $"Orcamento enviado para {ordemServico.Cliente?.Email} em {agora:O}";
 
         return MapearParaResponse(_ordemServicoRepository.Atualizar(ordemServico)!);
     }
@@ -366,7 +366,7 @@ public class OrdemServicoService : IOrdemServicoService
             ValorTotalServicos = ordemServico.ValorTotalServicos,
             ValorTotalPecasInsumos = ordemServico.ValorTotalPecasInsumos,
             ValorTotalOrcamento = ordemServico.ValorTotalOrcamento,
-            MockEnvioOrcamento = ordemServico.MockEnvioOrcamento,
+            EnvioOrcamento = ordemServico.EnvioOrcamento,
             MotivoRecusaOrcamento = ordemServico.MotivoRecusaOrcamento,
             CriadaEm = ordemServico.CriadaEm,
             DiagnosticoEm = ordemServico.DiagnosticoEm,

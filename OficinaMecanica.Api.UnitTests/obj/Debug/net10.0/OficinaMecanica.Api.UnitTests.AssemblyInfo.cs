@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OficinaMecanica.Api.UnitTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6c81cb327e9b26ca322f5db6dc275bd0e33b239f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cd61cdae94f5be9b22ba137faffbe04bf0cf6d34")]
 [assembly: System.Reflection.AssemblyProductAttribute("OficinaMecanica.Api.UnitTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OficinaMecanica.Api.UnitTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

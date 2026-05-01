@@ -16,7 +16,7 @@ public class OrdemServicoResponseDto
     public decimal ValorTotalServicos { get; set; }
     public decimal ValorTotalPecasInsumos { get; set; }
     public decimal ValorTotalOrcamento { get; set; }
-    public string MockEnvioOrcamento { get; set; } = string.Empty;
+    public string EnvioOrcamento { get; set; } = string.Empty;
     public string MotivoRecusaOrcamento { get; set; } = string.Empty;
     public DateTime CriadaEm { get; set; }
     public DateTime? DiagnosticoEm { get; set; }
