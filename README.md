@@ -26,7 +26,7 @@ O projeto atende os principais requisitos da fase 1:
 - MySQL 8.4
 - Docker e Docker Compose
 - xUnit
-- Swagger / OpenAPI
+- Swagger 
 
 ## Justificativa do banco de dados
 
@@ -47,7 +47,7 @@ Essa escolha foi feita pelos seguintes motivos:
 - `OficinaMecanica.Api/OficinaMecanica.Api.IntegrationTests/`: testes de integração
 - `docker-compose.yml`: ambiente completo com API e banco
 
-## Como executar com Docker
+## Como executar
 
 Na raiz do projeto, execute:
 
@@ -301,37 +301,26 @@ Status:
   - `GET /api/ordensservico/cliente/{cpfCnpj}`
 
 
-## Testes automatizados
 
-Os testes podem ser executados na raiz do repositório.
 
 ### Todos os testes
-
+Os testes podem ser executados na raiz do repositório.
 ```bash
-dotnet test --logger "console;verbosity=detailed"
+dotnet test 
 ```
 
 ### Apenas testes unitários
 
 ```bash
-dotnet test OficinaMecanica.Api.UnitTests/OficinaMecanica.Api.UnitTests.csproj --logger "console;verbosity=detailed"
+dotnet test OficinaMecanica.Api.UnitTests/OficinaMecanica.Api.UnitTests.csproj
 ```
 
 ### Apenas testes de integração
 
 ```bash
-dotnet test OficinaMecanica.Api.IntegrationTests/OficinaMecanica.Api.IntegrationTests.csproj --logger "console;verbosity=detailed"
+dotnet test OficinaMecanica.Api.IntegrationTests/OficinaMecanica.Api.IntegrationTests.csproj 
 ```
 
-### Coleta de cobertura
-
-Para gerar os arquivos de cobertura em formato Cobertura:
-
-```bash
-dotnet test --collect:"XPlat Code Coverage" --logger "console;verbosity=minimal"
-```
-
-Os arquivos são gerados dentro das pastas `TestResults` dos projetos de teste.
 
 ## Banco de dados
 
@@ -342,6 +331,8 @@ O MySQL pode ser acessado em:
 - database: `oficina_mecanica`
 - user: `oficina_user`
 - password: `oficina_pass`
+
+Pelo terminal pode rodar: docker compose exec mysql mysql -uoficina_user -poficina_pass oficina_mecanica
 
 ## SonarQube
 
