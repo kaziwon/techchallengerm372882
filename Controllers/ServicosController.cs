@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Api.Application.DTOs;
-using OficinaMecanica.Api.Application.Interfaces;
+using OficinaMecanica.Api.Application.UseCases.Servicos;
 
 namespace OficinaMecanica.Api.Controllers;
 
@@ -10,18 +10,31 @@ namespace OficinaMecanica.Api.Controllers;
 [Authorize]
 public class ServicosController : ControllerBase
 {
-    private readonly IServicoService _servicoService;
+    private readonly ObterTodosServicosUseCase _obterTodosServicosUseCase;
+    private readonly ObterServicoPorIdUseCase _obterServicoPorIdUseCase;
+    private readonly CriarServicoUseCase _criarServicoUseCase;
+    private readonly AtualizarServicoUseCase _atualizarServicoUseCase;
+    private readonly RemoverServicoUseCase _removerServicoUseCase;
 
-    public ServicosController(IServicoService servicoService)
+    public ServicosController(
+        ObterTodosServicosUseCase obterTodosServicosUseCase,
+        ObterServicoPorIdUseCase obterServicoPorIdUseCase,
+        CriarServicoUseCase criarServicoUseCase,
+        AtualizarServicoUseCase atualizarServicoUseCase,
+        RemoverServicoUseCase removerServicoUseCase)
     {
-        _servicoService = servicoService;
+        _obterTodosServicosUseCase = obterTodosServicosUseCase;
+        _obterServicoPorIdUseCase = obterServicoPorIdUseCase;
+        _criarServicoUseCase = criarServicoUseCase;
+        _atualizarServicoUseCase = atualizarServicoUseCase;
+        _removerServicoUseCase = removerServicoUseCase;
     }
 
     [HttpGet]
     [ProducesResponseType(typeof(List<ServicoResponseDto>), StatusCodes.Status200OK)]
     public IActionResult Get()
     {
-        return Ok(_servicoService.ObterTodos());
+        return Ok(_obterTodosServicosUseCase.Executar().Select(MapearResponse).ToList());
     }
 
     [HttpGet("{id:guid}")]
@@ -29,9 +42,9 @@ public class ServicosController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult GetById(Guid id)
     {
-        var servico = _servicoService.ObterPorId(id);
+        var servico = _obterServicoPorIdUseCase.Executar(id);
 
-        return servico is null ? NotFound() : Ok(servico);
+        return servico is null ? NotFound() : Ok(MapearResponse(servico));
     }
 
     [HttpPost]
@@ -42,7 +55,8 @@ public class ServicosController : ControllerBase
     {
         try
         {
-            var servico = _servicoService.Adicionar(servicoRequestDto);
+            var input = new ServicoInput(servicoRequestDto.Nome, servicoRequestDto.Descricao, servicoRequestDto.Preco);
+            var servico = MapearResponse(_criarServicoUseCase.Executar(input));
             return CreatedAtAction(nameof(GetById), new { id = servico.Id }, servico);
         }
         catch (InvalidOperationException ex)
@@ -60,9 +74,10 @@ public class ServicosController : ControllerBase
     {
         try
         {
-            var servico = _servicoService.Atualizar(id, servicoRequestDto);
+            var input = new ServicoInput(servicoRequestDto.Nome, servicoRequestDto.Descricao, servicoRequestDto.Preco);
+            var servico = _atualizarServicoUseCase.Executar(id, input);
 
-            return servico is null ? NotFound() : Ok(servico);
+            return servico is null ? NotFound() : Ok(MapearResponse(servico));
         }
         catch (InvalidOperationException ex)
         {
@@ -75,8 +90,19 @@ public class ServicosController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult Delete(Guid id)
     {
-        var removido = _servicoService.Remover(id);
+        var removido = _removerServicoUseCase.Executar(id);
 
         return removido ? NoContent() : NotFound();
+    }
+
+    private static ServicoResponseDto MapearResponse(ServicoOutput servico)
+    {
+        return new ServicoResponseDto
+        {
+            Id = servico.Id,
+            Nome = servico.Nome,
+            Descricao = servico.Descricao,
+            Preco = servico.Preco
+        };
     }
 }

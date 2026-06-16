@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Api.Application.DTOs;
-using OficinaMecanica.Api.Application.Interfaces;
+using OficinaMecanica.Api.Application.UseCases.Auth;
 
 namespace OficinaMecanica.Api.Controllers;
 
@@ -10,11 +10,11 @@ namespace OficinaMecanica.Api.Controllers;
 [AllowAnonymous]
 public class AuthController : ControllerBase
 {
-    private readonly IAuthService _authService;
+    private readonly LoginUseCase _loginUseCase;
 
-    public AuthController(IAuthService authService)
+    public AuthController(LoginUseCase loginUseCase)
     {
-        _authService = authService;
+        _loginUseCase = loginUseCase;
     }
 
     [HttpPost("login")]
@@ -22,7 +22,14 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public IActionResult Login([FromBody] LoginRequestDto loginRequestDto)
     {
-        var response = _authService.Login(loginRequestDto);
+        var output = _loginUseCase.Executar(new LoginInput(loginRequestDto.Username, loginRequestDto.Password));
+        var response = output is null
+            ? null
+            : new LoginResponseDto
+            {
+                Token = output.Token,
+                ExpiresAt = output.ExpiresAt
+            };
 
         return response is null ? Unauthorized() : Ok(response);
     }

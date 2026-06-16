@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Api.Application.DTOs;
-using OficinaMecanica.Api.Application.Interfaces;
+using OficinaMecanica.Api.Application.UseCases.OrdensServico;
 
 namespace OficinaMecanica.Api.Controllers;
 
@@ -10,25 +10,66 @@ namespace OficinaMecanica.Api.Controllers;
 [Authorize]
 public class OrdensServicoController : ControllerBase
 {
-    private readonly IOrdemServicoService _ordemServicoService;
+    private readonly ObterTodasOrdensServicoUseCase _obterTodasOrdensServicoUseCase;
+    private readonly ObterTempoMedioExecucaoUseCase _obterTempoMedioExecucaoUseCase;
+    private readonly ObterOrdensPorCpfCnpjClienteUseCase _obterOrdensPorCpfCnpjClienteUseCase;
+    private readonly ObterOrdemServicoPorIdUseCase _obterOrdemServicoPorIdUseCase;
+    private readonly CriarOrdemServicoUseCase _criarOrdemServicoUseCase;
+    private readonly IniciarDiagnosticoUseCase _iniciarDiagnosticoUseCase;
+    private readonly EnviarOrcamentoUseCase _enviarOrcamentoUseCase;
+    private readonly AprovarOrcamentoUseCase _aprovarOrcamentoUseCase;
+    private readonly RecusarOrcamentoUseCase _recusarOrcamentoUseCase;
+    private readonly CancelarOrdemServicoUseCase _cancelarOrdemServicoUseCase;
+    private readonly FinalizarOrdemServicoUseCase _finalizarOrdemServicoUseCase;
+    private readonly EntregarOrdemServicoUseCase _entregarOrdemServicoUseCase;
 
-    public OrdensServicoController(IOrdemServicoService ordemServicoService)
+    public OrdensServicoController(
+        ObterTodasOrdensServicoUseCase obterTodasOrdensServicoUseCase,
+        ObterTempoMedioExecucaoUseCase obterTempoMedioExecucaoUseCase,
+        ObterOrdensPorCpfCnpjClienteUseCase obterOrdensPorCpfCnpjClienteUseCase,
+        ObterOrdemServicoPorIdUseCase obterOrdemServicoPorIdUseCase,
+        CriarOrdemServicoUseCase criarOrdemServicoUseCase,
+        IniciarDiagnosticoUseCase iniciarDiagnosticoUseCase,
+        EnviarOrcamentoUseCase enviarOrcamentoUseCase,
+        AprovarOrcamentoUseCase aprovarOrcamentoUseCase,
+        RecusarOrcamentoUseCase recusarOrcamentoUseCase,
+        CancelarOrdemServicoUseCase cancelarOrdemServicoUseCase,
+        FinalizarOrdemServicoUseCase finalizarOrdemServicoUseCase,
+        EntregarOrdemServicoUseCase entregarOrdemServicoUseCase)
     {
-        _ordemServicoService = ordemServicoService;
+        _obterTodasOrdensServicoUseCase = obterTodasOrdensServicoUseCase;
+        _obterTempoMedioExecucaoUseCase = obterTempoMedioExecucaoUseCase;
+        _obterOrdensPorCpfCnpjClienteUseCase = obterOrdensPorCpfCnpjClienteUseCase;
+        _obterOrdemServicoPorIdUseCase = obterOrdemServicoPorIdUseCase;
+        _criarOrdemServicoUseCase = criarOrdemServicoUseCase;
+        _iniciarDiagnosticoUseCase = iniciarDiagnosticoUseCase;
+        _enviarOrcamentoUseCase = enviarOrcamentoUseCase;
+        _aprovarOrcamentoUseCase = aprovarOrcamentoUseCase;
+        _recusarOrcamentoUseCase = recusarOrcamentoUseCase;
+        _cancelarOrdemServicoUseCase = cancelarOrdemServicoUseCase;
+        _finalizarOrdemServicoUseCase = finalizarOrdemServicoUseCase;
+        _entregarOrdemServicoUseCase = entregarOrdemServicoUseCase;
     }
 
     [HttpGet]
     [ProducesResponseType(typeof(List<OrdemServicoResponseDto>), StatusCodes.Status200OK)]
     public IActionResult Get()
     {
-        return Ok(_ordemServicoService.ObterTodas());
+        return Ok(_obterTodasOrdensServicoUseCase.Executar().Select(MapearResponse).ToList());
     }
 
     [HttpGet("tempo-medio-execucao")]
     [ProducesResponseType(typeof(TempoMedioExecucaoResponseDto), StatusCodes.Status200OK)]
     public IActionResult GetTempoMedioExecucao()
     {
-        return Ok(_ordemServicoService.ObterTempoMedioExecucao());
+        var tempoMedio = _obterTempoMedioExecucaoUseCase.Executar();
+
+        return Ok(new TempoMedioExecucaoResponseDto
+        {
+            QuantidadeOrdensConsideradas = tempoMedio.QuantidadeOrdensConsideradas,
+            TempoMedioExecucaoEmMinutos = tempoMedio.TempoMedioExecucaoEmMinutos,
+            TempoMedioExecucaoFormatado = tempoMedio.TempoMedioExecucaoFormatado
+        });
     }
 
     [HttpGet("cliente/{cpfCnpj}")]
@@ -36,7 +77,7 @@ public class OrdensServicoController : ControllerBase
     [AllowAnonymous]
     public IActionResult GetByCpfCnpjCliente(string cpfCnpj)
     {
-        return Ok(_ordemServicoService.ObterPorCpfCnpjCliente(cpfCnpj));
+        return Ok(_obterOrdensPorCpfCnpjClienteUseCase.Executar(cpfCnpj).Select(MapearResponse).ToList());
     }
 
     [HttpGet("{id:guid}")]
@@ -44,9 +85,9 @@ public class OrdensServicoController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult GetById(Guid id)
     {
-        var ordemServico = _ordemServicoService.ObterPorId(id);
+        var ordemServico = _obterOrdemServicoPorIdUseCase.Executar(id);
 
-        return ordemServico is null ? NotFound() : Ok(ordemServico);
+        return ordemServico is null ? NotFound() : Ok(MapearResponse(ordemServico));
     }
 
     [HttpPost]
@@ -57,7 +98,8 @@ public class OrdensServicoController : ControllerBase
     {
         try
         {
-            var ordemServico = _ordemServicoService.Criar(ordemServicoRequestDto);
+            var input = new CriarOrdemServicoInput(ordemServicoRequestDto.CpfCnpj, ordemServicoRequestDto.VeiculoId);
+            var ordemServico = MapearResponse(_criarOrdemServicoUseCase.Executar(input));
             return CreatedAtAction(nameof(GetById), new { id = ordemServico.Id }, ordemServico);
         }
         catch (InvalidOperationException ex)
@@ -74,8 +116,8 @@ public class OrdensServicoController : ControllerBase
     {
         try
         {
-            var ordemServico = _ordemServicoService.IniciarDiagnostico(id);
-            return ordemServico is null ? NotFound() : Ok(ordemServico);
+            var ordemServico = _iniciarDiagnosticoUseCase.Executar(id);
+            return ordemServico is null ? NotFound() : Ok(MapearResponse(ordemServico));
         }
         catch (InvalidOperationException ex)
         {
@@ -91,8 +133,13 @@ public class OrdensServicoController : ControllerBase
     {
         try
         {
-            var ordemServico = _ordemServicoService.EnviarOrcamento(id, requestDto);
-            return ordemServico is null ? NotFound() : Ok(ordemServico);
+            var input = new OrdemServicoOrcamentoInput(
+                requestDto.ServicoIds,
+                requestDto.PecasInsumos
+                    .Select(item => new OrdemServicoItemPecaInsumoInput(item.PecaInsumoId, item.Quantidade))
+                    .ToList());
+            var ordemServico = _enviarOrcamentoUseCase.Executar(id, input);
+            return ordemServico is null ? NotFound() : Ok(MapearResponse(ordemServico));
         }
         catch (InvalidOperationException ex)
         {
@@ -108,8 +155,8 @@ public class OrdensServicoController : ControllerBase
     {
         try
         {
-            var ordemServico = _ordemServicoService.AprovarOrcamento(id);
-            return ordemServico is null ? NotFound() : Ok(ordemServico);
+            var ordemServico = _aprovarOrcamentoUseCase.Executar(id);
+            return ordemServico is null ? NotFound() : Ok(MapearResponse(ordemServico));
         }
         catch (InvalidOperationException ex)
         {
@@ -125,8 +172,8 @@ public class OrdensServicoController : ControllerBase
     {
         try
         {
-            var ordemServico = _ordemServicoService.RecusarOrcamento(id, requestDto);
-            return ordemServico is null ? NotFound() : Ok(ordemServico);
+            var ordemServico = _recusarOrcamentoUseCase.Executar(id, new RecusarOrcamentoInput(requestDto.MotivoRecusa));
+            return ordemServico is null ? NotFound() : Ok(MapearResponse(ordemServico));
         }
         catch (InvalidOperationException ex)
         {
@@ -142,8 +189,8 @@ public class OrdensServicoController : ControllerBase
     {
         try
         {
-            var ordemServico = _ordemServicoService.Cancelar(id);
-            return ordemServico is null ? NotFound() : Ok(ordemServico);
+            var ordemServico = _cancelarOrdemServicoUseCase.Executar(id);
+            return ordemServico is null ? NotFound() : Ok(MapearResponse(ordemServico));
         }
         catch (InvalidOperationException ex)
         {
@@ -159,8 +206,8 @@ public class OrdensServicoController : ControllerBase
     {
         try
         {
-            var ordemServico = _ordemServicoService.Finalizar(id);
-            return ordemServico is null ? NotFound() : Ok(ordemServico);
+            var ordemServico = _finalizarOrdemServicoUseCase.Executar(id);
+            return ordemServico is null ? NotFound() : Ok(MapearResponse(ordemServico));
         }
         catch (InvalidOperationException ex)
         {
@@ -176,12 +223,53 @@ public class OrdensServicoController : ControllerBase
     {
         try
         {
-            var ordemServico = _ordemServicoService.Entregar(id);
-            return ordemServico is null ? NotFound() : Ok(ordemServico);
+            var ordemServico = _entregarOrdemServicoUseCase.Executar(id);
+            return ordemServico is null ? NotFound() : Ok(MapearResponse(ordemServico));
         }
         catch (InvalidOperationException ex)
         {
             return Conflict(new { message = ex.Message });
         }
+    }
+
+    private static OrdemServicoResponseDto MapearResponse(OrdemServicoOutput ordemServico)
+    {
+        return new OrdemServicoResponseDto
+        {
+            Id = ordemServico.Id,
+            ClienteId = ordemServico.ClienteId,
+            ClienteNome = ordemServico.ClienteNome,
+            ClienteCpfCnpj = ordemServico.ClienteCpfCnpj,
+            VeiculoId = ordemServico.VeiculoId,
+            PlacaVeiculo = ordemServico.PlacaVeiculo,
+            ModeloVeiculo = ordemServico.ModeloVeiculo,
+            Status = ordemServico.Status,
+            StatusAprovacaoOrcamento = ordemServico.StatusAprovacaoOrcamento,
+            ValorTotalServicos = ordemServico.ValorTotalServicos,
+            ValorTotalPecasInsumos = ordemServico.ValorTotalPecasInsumos,
+            ValorTotalOrcamento = ordemServico.ValorTotalOrcamento,
+            EnvioOrcamento = ordemServico.EnvioOrcamento,
+            MotivoRecusaOrcamento = ordemServico.MotivoRecusaOrcamento,
+            CriadaEm = ordemServico.CriadaEm,
+            DiagnosticoEm = ordemServico.DiagnosticoEm,
+            OrcamentoEnviadoEm = ordemServico.OrcamentoEnviadoEm,
+            ExecucaoIniciadaEm = ordemServico.ExecucaoIniciadaEm,
+            FinalizadaEm = ordemServico.FinalizadaEm,
+            EntregueEm = ordemServico.EntregueEm,
+            ItensServico = ordemServico.ItensServico.Select(item => new OrdemServicoItemServicoResponseDto
+            {
+                ServicoId = item.ServicoId,
+                NomeServico = item.NomeServico,
+                PrecoServico = item.PrecoServico
+            }).ToList(),
+            ItensPecaInsumo = ordemServico.ItensPecaInsumo.Select(item => new OrdemServicoItemPecaInsumoResponseDto
+            {
+                PecaInsumoId = item.PecaInsumoId,
+                NomePecaInsumo = item.NomePecaInsumo,
+                PrecoUnitario = item.PrecoUnitario,
+                Quantidade = item.Quantidade,
+                Subtotal = item.Subtotal
+            }).ToList()
+        };
     }
 }

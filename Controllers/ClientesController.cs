@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Api.Application.DTOs;
-using OficinaMecanica.Api.Application.Interfaces;
+using OficinaMecanica.Api.Application.UseCases.Clientes;
 
 namespace OficinaMecanica.Api.Controllers;
 
@@ -10,18 +10,34 @@ namespace OficinaMecanica.Api.Controllers;
 [Authorize]
 public class ClientesController : ControllerBase
 {
-    private readonly IClienteService _clienteService;
+    private readonly ObterTodosClientesUseCase _obterTodosClientesUseCase;
+    private readonly ObterClientePorIdUseCase _obterClientePorIdUseCase;
+    private readonly CriarClienteUseCase _criarClienteUseCase;
+    private readonly AtualizarClienteUseCase _atualizarClienteUseCase;
+    private readonly RemoverClienteUseCase _removerClienteUseCase;
 
-    public ClientesController(IClienteService clienteService)
+    public ClientesController(
+        ObterTodosClientesUseCase obterTodosClientesUseCase,
+        ObterClientePorIdUseCase obterClientePorIdUseCase,
+        CriarClienteUseCase criarClienteUseCase,
+        AtualizarClienteUseCase atualizarClienteUseCase,
+        RemoverClienteUseCase removerClienteUseCase)
     {
-        _clienteService = clienteService;
+        _obterTodosClientesUseCase = obterTodosClientesUseCase;
+        _obterClientePorIdUseCase = obterClientePorIdUseCase;
+        _criarClienteUseCase = criarClienteUseCase;
+        _atualizarClienteUseCase = atualizarClienteUseCase;
+        _removerClienteUseCase = removerClienteUseCase;
     }
 
     [HttpGet]
     [ProducesResponseType(typeof(List<ClienteResponseDto>), StatusCodes.Status200OK)]
     public IActionResult Get()
     {
-        var clientes = _clienteService.ObterTodos();
+        var clientes = _obterTodosClientesUseCase
+            .Executar()
+            .Select(MapearResponse)
+            .ToList();
 
         return Ok(clientes);
     }
@@ -31,14 +47,14 @@ public class ClientesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult GetById(Guid id)
     {
-        var cliente = _clienteService.ObterPorId(id);
+        var cliente = _obterClientePorIdUseCase.Executar(id);
 
         if (cliente is null)
         {
             return NotFound();
         }
 
-        return Ok(cliente);
+        return Ok(MapearResponse(cliente));
     }
 
     [HttpPost]
@@ -49,7 +65,12 @@ public class ClientesController : ControllerBase
     {
         try
         {
-            var clienteAdicionado = _clienteService.Adicionar(clienteRequestDto);
+            var input = new CriarClienteInput(
+                clienteRequestDto.Nome,
+                clienteRequestDto.CpfCnpj,
+                clienteRequestDto.Email,
+                clienteRequestDto.Telefone);
+            var clienteAdicionado = MapearResponse(_criarClienteUseCase.Executar(input));
 
             return CreatedAtAction(nameof(GetById), new { id = clienteAdicionado.Id }, clienteAdicionado);
         }
@@ -68,14 +89,20 @@ public class ClientesController : ControllerBase
     {
         try
         {
-            var clienteAtualizado = _clienteService.Atualizar(id, clienteRequestDto);
+            var input = new AtualizarClienteInput(
+                id,
+                clienteRequestDto.Nome,
+                clienteRequestDto.CpfCnpj,
+                clienteRequestDto.Email,
+                clienteRequestDto.Telefone);
+            var clienteAtualizado = _atualizarClienteUseCase.Executar(input);
 
             if (clienteAtualizado is null)
             {
                 return NotFound();
             }
 
-            return Ok(clienteAtualizado);
+            return Ok(MapearResponse(clienteAtualizado));
         }
         catch (InvalidOperationException ex)
         {
@@ -88,7 +115,7 @@ public class ClientesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult Delete(Guid id)
     {
-        var removido = _clienteService.Remover(id);
+        var removido = _removerClienteUseCase.Executar(id);
 
         if (!removido)
         {
@@ -96,5 +123,17 @@ public class ClientesController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    private static ClienteResponseDto MapearResponse(ClienteOutput cliente)
+    {
+        return new ClienteResponseDto
+        {
+            Id = cliente.Id,
+            Nome = cliente.Nome,
+            CpfCnpj = cliente.CpfCnpj,
+            Email = cliente.Email,
+            Telefone = cliente.Telefone
+        };
     }
 }

@@ -1,0 +1,11 @@
+bin/
+obj/
+coverage/
+zap-report/
+.git/
+.gitignore
+.vs/
+.vscode/
+Dockerfile
+docker-compose*.yml
+README.md
