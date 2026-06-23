@@ -40,6 +40,77 @@ public class OrdemServicoEndpointsTests
     }
 
     [Fact]
+    public async Task PostOrdemServico_DeveCriarClienteEVeiculoQuandoEnviarCadastroCompleto()
+    {
+        await using var factory = new CustomWebApplicationFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
+
+        var response = await client.PostAsJsonAsync("/api/ordensservico", new OrdemServicoRequestDto
+        {
+            Cliente = new OrdemServicoClienteRequestDto
+            {
+                Nome = "Cliente completo",
+                CpfCnpj = "39053344705",
+                Email = $"{Guid.NewGuid():N}@email.com",
+                Telefone = "11999999999"
+            },
+            Veiculo = new OrdemServicoVeiculoRequestDto
+            {
+                Placa = "BRA-2E19",
+                Marca = "Honda",
+                Modelo = "Civic",
+                Ano = 2023
+            }
+        });
+        var ordem = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>();
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.NotNull(ordem);
+        Assert.Equal(StatusOrdemServico.Recebida, ordem.Status);
+        Assert.Equal("39053344705", ordem.ClienteCpfCnpj);
+        Assert.Equal("BRA2E19", ordem.PlacaVeiculo);
+    }
+
+    [Fact]
+    public async Task PostOrdemServico_DeveIncluirServicosEPecasQuandoEnviarItensIniciais()
+    {
+        await using var factory = new CustomWebApplicationFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
+
+        var cliente = await CriarCliente(client);
+        var servico = await CriarServico(client);
+        var peca = await CriarPeca(client);
+        var veiculo = await CriarVeiculo(client, cliente.Id);
+
+        var response = await client.PostAsJsonAsync("/api/ordensservico", new OrdemServicoRequestDto
+        {
+            CpfCnpj = cliente.CpfCnpj,
+            VeiculoId = veiculo.Id,
+            ServicoIds = [servico.Id],
+            PecasInsumos =
+            [
+                new OrdemServicoItemPecaInsumoRequestDto
+                {
+                    PecaInsumoId = peca.Id,
+                    Quantidade = 2
+                }
+            ]
+        });
+        var ordem = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>();
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.NotNull(ordem);
+        Assert.Single(ordem.ItensServico);
+        Assert.Single(ordem.ItensPecaInsumo);
+        Assert.Equal(120m, ordem.ValorTotalServicos);
+        Assert.Equal(60m, ordem.ValorTotalPecasInsumos);
+        Assert.Equal(180m, ordem.ValorTotalOrcamento);
+        Assert.Equal(StatusOrdemServico.Recebida, ordem.Status);
+    }
+
+    [Fact]
     public async Task IniciarDiagnostico_DeveAlterarStatusParaEmDiagnostico()
     {
         await using var factory = new CustomWebApplicationFactory();

@@ -56,6 +56,96 @@ public class OrdemServicoUseCasesTests
     }
 
     [Fact]
+    public void Criar_DeveCriarClienteEVeiculo_QuandoEnviarCadastroCompleto()
+    {
+        var contexto = new FakeContextoOrdemServico();
+        var useCase = contexto.CriarOrdemServicoUseCase();
+        var input = new CriarOrdemServicoInput(
+            null,
+            null,
+            new CriarOrdemServicoClienteInput("Ana Silva", "390.533.447-05", "ana@email.com", "11999999999"),
+            new CriarOrdemServicoVeiculoInput("bra-2e19", "Honda", "Civic", 2023));
+
+        var response = useCase.Executar(input);
+
+        Assert.Equal(StatusOrdemServico.Recebida, response.Status);
+        Assert.Single(contexto.ClienteGateway.Clientes);
+        Assert.Single(contexto.VeiculoGateway.Veiculos);
+        Assert.Equal("39053344705", contexto.ClienteGateway.Clientes[0].CpfCnpj);
+        Assert.Equal("BRA2E19", contexto.VeiculoGateway.Veiculos[0].Placa);
+        Assert.Equal(contexto.ClienteGateway.Clientes[0].Id, contexto.VeiculoGateway.Veiculos[0].ClienteId);
+    }
+
+    [Fact]
+    public void Criar_DeveIncluirServicosEPecasInsumos_QuandoEnviarItensIniciais()
+    {
+        var contexto = CriarContextoBasico();
+        var useCase = contexto.CriarOrdemServicoUseCase();
+        var input = new CriarOrdemServicoInput(
+            contexto.Cliente.CpfCnpj,
+            contexto.Veiculo.Id,
+            null,
+            null,
+            [contexto.Servico.Id],
+            [new OrdemServicoItemPecaInsumoInput(contexto.Peca.Id, 2)]);
+
+        var response = useCase.Executar(input);
+
+        Assert.Single(response.ItensServico);
+        Assert.Single(response.ItensPecaInsumo);
+        Assert.Equal(150m, response.ValorTotalServicos);
+        Assert.Equal(70m, response.ValorTotalPecasInsumos);
+        Assert.Equal(220m, response.ValorTotalOrcamento);
+        Assert.Equal(StatusOrdemServico.Recebida, response.Status);
+        Assert.Equal(StatusAprovacaoOrcamento.Pendente, response.StatusAprovacaoOrcamento);
+    }
+
+    [Fact]
+    public void Criar_DeveLancarExcecao_QuandoServicoInicialNaoExistir()
+    {
+        var contexto = CriarContextoBasico();
+        var useCase = contexto.CriarOrdemServicoUseCase();
+        var input = new CriarOrdemServicoInput(
+            contexto.Cliente.CpfCnpj,
+            contexto.Veiculo.Id,
+            null,
+            null,
+            [Guid.NewGuid()],
+            []);
+
+        Assert.Throws<InvalidOperationException>(() => useCase.Executar(input));
+    }
+
+    [Fact]
+    public void Criar_DeveLancarExcecao_QuandoMisturarModosDeCriacao()
+    {
+        var contexto = new FakeContextoOrdemServico();
+        var useCase = contexto.CriarOrdemServicoUseCase();
+        var input = new CriarOrdemServicoInput(
+            "39053344705",
+            Guid.NewGuid(),
+            new CriarOrdemServicoClienteInput("Ana Silva", "390.533.447-05", "ana@email.com", "11999999999"),
+            null);
+
+        Assert.Throws<InvalidOperationException>(() => useCase.Executar(input));
+    }
+
+    [Fact]
+    public void Criar_DeveLancarExcecao_QuandoCadastroCompletoTiverCpfCnpjDuplicado()
+    {
+        var contexto = new FakeContextoOrdemServico();
+        contexto.ClienteGateway.Clientes.Add(CriarCliente());
+        var useCase = contexto.CriarOrdemServicoUseCase();
+        var input = new CriarOrdemServicoInput(
+            null,
+            null,
+            new CriarOrdemServicoClienteInput("Ana Silva", "390.533.447-05", "ana@email.com", "11999999999"),
+            new CriarOrdemServicoVeiculoInput("BRA2E19", "Honda", "Civic", 2023));
+
+        Assert.Throws<InvalidOperationException>(() => useCase.Executar(input));
+    }
+
+    [Fact]
     public void EnviarOrcamento_DeveAlterarStatusESimularEnvio()
     {
         var contexto = new FakeContextoOrdemServico();
@@ -449,7 +539,12 @@ public class OrdemServicoUseCasesTests
 
         public CriarOrdemServicoUseCase CriarOrdemServicoUseCase()
         {
-            return new CriarOrdemServicoUseCase(OrdemServicoGateway, ClienteGateway, VeiculoGateway);
+            return new CriarOrdemServicoUseCase(
+                OrdemServicoGateway,
+                ClienteGateway,
+                VeiculoGateway,
+                ServicoGateway,
+                PecaInsumoGateway);
         }
 
         public EnviarOrcamentoUseCase EnviarOrcamentoUseCase()

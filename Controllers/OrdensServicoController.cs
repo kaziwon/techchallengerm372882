@@ -98,7 +98,15 @@ public class OrdensServicoController : ControllerBase
     {
         try
         {
-            var input = new CriarOrdemServicoInput(ordemServicoRequestDto.CpfCnpj, ordemServicoRequestDto.VeiculoId, ordemServicoRequestDto.Veiculo, ordemServicoRequestDto.Cliente);
+            var input = new CriarOrdemServicoInput(
+                ordemServicoRequestDto.CpfCnpj,
+                ordemServicoRequestDto.VeiculoId,
+                MapearClienteInput(ordemServicoRequestDto.Cliente),
+                MapearVeiculoInput(ordemServicoRequestDto.Veiculo),
+                ordemServicoRequestDto.ServicoIds,
+                ordemServicoRequestDto.PecasInsumos
+                    .Select(item => new OrdemServicoItemPecaInsumoInput(item.PecaInsumoId, item.Quantidade))
+                    .ToList());
             var ordemServico = MapearResponse(_criarOrdemServicoUseCase.Executar(input));
             return CreatedAtAction(nameof(GetById), new { id = ordemServico.Id }, ordemServico);
         }
@@ -106,6 +114,28 @@ public class OrdensServicoController : ControllerBase
         {
             return Conflict(new { message = ex.Message });
         }
+    }
+
+    private static CriarOrdemServicoClienteInput? MapearClienteInput(OrdemServicoClienteRequestDto? cliente)
+    {
+        return cliente is null
+            ? null
+            : new CriarOrdemServicoClienteInput(
+                cliente.Nome,
+                cliente.CpfCnpj,
+                cliente.Email,
+                cliente.Telefone);
+    }
+
+    private static CriarOrdemServicoVeiculoInput? MapearVeiculoInput(OrdemServicoVeiculoRequestDto? veiculo)
+    {
+        return veiculo is null
+            ? null
+            : new CriarOrdemServicoVeiculoInput(
+                veiculo.Placa,
+                veiculo.Marca,
+                veiculo.Modelo,
+                veiculo.Ano);
     }
 
     [HttpPost("{id:guid}/iniciar-diagnostico")]
