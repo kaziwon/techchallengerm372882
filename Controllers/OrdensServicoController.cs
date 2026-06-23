@@ -98,7 +98,7 @@ public class OrdensServicoController : ControllerBase
     {
         try
         {
-            var input = new CriarOrdemServicoInput(ordemServicoRequestDto.CpfCnpj, ordemServicoRequestDto.VeiculoId);
+            var input = new CriarOrdemServicoInput(ordemServicoRequestDto.CpfCnpj, ordemServicoRequestDto.VeiculoId, ordemServicoRequestDto.Veiculo, ordemServicoRequestDto.Cliente);
             var ordemServico = MapearResponse(_criarOrdemServicoUseCase.Executar(input));
             return CreatedAtAction(nameof(GetById), new { id = ordemServico.Id }, ordemServico);
         }

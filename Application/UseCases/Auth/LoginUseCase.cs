@@ -7,14 +7,6 @@ using OficinaMecanica.Api.Application.Settings;
 
 namespace OficinaMecanica.Api.Application.UseCases.Auth;
 
-public record LoginInput(string Username, string Password);
-
-public class LoginOutput
-{
-    public string Token { get; set; } = string.Empty;
-    public DateTime ExpiresAt { get; set; }
-}
-
 public class LoginUseCase
 {
     private readonly JwtSettings _jwtSettings;
