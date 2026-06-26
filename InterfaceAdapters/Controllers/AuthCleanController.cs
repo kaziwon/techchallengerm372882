@@ -1,0 +1,27 @@
+using OficinaMecanica.Api.Application.DTOs;
+using OficinaMecanica.Api.Application.UseCases.Auth;
+
+namespace OficinaMecanica.Api.InterfaceAdapters.Controllers;
+
+public class AuthCleanController
+{
+    private readonly LoginUseCase _loginUseCase;
+
+    public AuthCleanController(LoginUseCase loginUseCase)
+    {
+        _loginUseCase = loginUseCase;
+    }
+
+    public LoginResponseDto? Login(LoginRequestDto loginRequestDto)
+    {
+        var output = _loginUseCase.Executar(new LoginInput(loginRequestDto.Username, loginRequestDto.Password));
+
+        return output is null
+            ? null
+            : new LoginResponseDto
+            {
+                Token = output.Token,
+                ExpiresAt = output.ExpiresAt
+            };
+    }
+}

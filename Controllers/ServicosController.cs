@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Api.Application.DTOs;
-using OficinaMecanica.Api.Application.UseCases.Servicos;
+using OficinaMecanica.Api.InterfaceAdapters.Controllers;
 
 namespace OficinaMecanica.Api.Controllers;
 
@@ -10,31 +10,18 @@ namespace OficinaMecanica.Api.Controllers;
 [Authorize]
 public class ServicosController : ControllerBase
 {
-    private readonly ObterTodosServicosUseCase _obterTodosServicosUseCase;
-    private readonly ObterServicoPorIdUseCase _obterServicoPorIdUseCase;
-    private readonly CriarServicoUseCase _criarServicoUseCase;
-    private readonly AtualizarServicoUseCase _atualizarServicoUseCase;
-    private readonly RemoverServicoUseCase _removerServicoUseCase;
+    private readonly ServicosCleanController _servicosCleanController;
 
-    public ServicosController(
-        ObterTodosServicosUseCase obterTodosServicosUseCase,
-        ObterServicoPorIdUseCase obterServicoPorIdUseCase,
-        CriarServicoUseCase criarServicoUseCase,
-        AtualizarServicoUseCase atualizarServicoUseCase,
-        RemoverServicoUseCase removerServicoUseCase)
+    public ServicosController(ServicosCleanController servicosCleanController)
     {
-        _obterTodosServicosUseCase = obterTodosServicosUseCase;
-        _obterServicoPorIdUseCase = obterServicoPorIdUseCase;
-        _criarServicoUseCase = criarServicoUseCase;
-        _atualizarServicoUseCase = atualizarServicoUseCase;
-        _removerServicoUseCase = removerServicoUseCase;
+        _servicosCleanController = servicosCleanController;
     }
 
     [HttpGet]
     [ProducesResponseType(typeof(List<ServicoResponseDto>), StatusCodes.Status200OK)]
     public IActionResult Get()
     {
-        return Ok(_obterTodosServicosUseCase.Executar().Select(MapearResponse).ToList());
+        return Ok(_servicosCleanController.ObterTodos());
     }
 
     [HttpGet("{id:guid}")]
@@ -42,9 +29,9 @@ public class ServicosController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult GetById(Guid id)
     {
-        var servico = _obterServicoPorIdUseCase.Executar(id);
+        var servico = _servicosCleanController.ObterPorId(id);
 
-        return servico is null ? NotFound() : Ok(MapearResponse(servico));
+        return servico is null ? NotFound() : Ok(servico);
     }
 
     [HttpPost]
@@ -55,8 +42,7 @@ public class ServicosController : ControllerBase
     {
         try
         {
-            var input = new ServicoInput(servicoRequestDto.Nome, servicoRequestDto.Descricao, servicoRequestDto.Preco);
-            var servico = MapearResponse(_criarServicoUseCase.Executar(input));
+            var servico = _servicosCleanController.Criar(servicoRequestDto);
             return CreatedAtAction(nameof(GetById), new { id = servico.Id }, servico);
         }
         catch (InvalidOperationException ex)
@@ -74,10 +60,9 @@ public class ServicosController : ControllerBase
     {
         try
         {
-            var input = new ServicoInput(servicoRequestDto.Nome, servicoRequestDto.Descricao, servicoRequestDto.Preco);
-            var servico = _atualizarServicoUseCase.Executar(id, input);
+            var servico = _servicosCleanController.Atualizar(id, servicoRequestDto);
 
-            return servico is null ? NotFound() : Ok(MapearResponse(servico));
+            return servico is null ? NotFound() : Ok(servico);
         }
         catch (InvalidOperationException ex)
         {
@@ -90,19 +75,8 @@ public class ServicosController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult Delete(Guid id)
     {
-        var removido = _removerServicoUseCase.Executar(id);
+        var removido = _servicosCleanController.Remover(id);
 
         return removido ? NoContent() : NotFound();
-    }
-
-    private static ServicoResponseDto MapearResponse(ServicoOutput servico)
-    {
-        return new ServicoResponseDto
-        {
-            Id = servico.Id,
-            Nome = servico.Nome,
-            Descricao = servico.Descricao,
-            Preco = servico.Preco
-        };
     }
 }

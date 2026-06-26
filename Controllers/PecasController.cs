@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Api.Application.DTOs;
-using OficinaMecanica.Api.Application.UseCases.PecasInsumos;
+using OficinaMecanica.Api.InterfaceAdapters.Controllers;
 
 namespace OficinaMecanica.Api.Controllers;
 
@@ -10,31 +10,18 @@ namespace OficinaMecanica.Api.Controllers;
 [Authorize]
 public class PecasController : ControllerBase
 {
-    private readonly ObterTodasPecasInsumosUseCase _obterTodasPecasInsumosUseCase;
-    private readonly ObterPecaInsumoPorIdUseCase _obterPecaInsumoPorIdUseCase;
-    private readonly CriarPecaInsumoUseCase _criarPecaInsumoUseCase;
-    private readonly AtualizarPecaInsumoUseCase _atualizarPecaInsumoUseCase;
-    private readonly RemoverPecaInsumoUseCase _removerPecaInsumoUseCase;
+    private readonly PecasCleanController _pecasCleanController;
 
-    public PecasController(
-        ObterTodasPecasInsumosUseCase obterTodasPecasInsumosUseCase,
-        ObterPecaInsumoPorIdUseCase obterPecaInsumoPorIdUseCase,
-        CriarPecaInsumoUseCase criarPecaInsumoUseCase,
-        AtualizarPecaInsumoUseCase atualizarPecaInsumoUseCase,
-        RemoverPecaInsumoUseCase removerPecaInsumoUseCase)
+    public PecasController(PecasCleanController pecasCleanController)
     {
-        _obterTodasPecasInsumosUseCase = obterTodasPecasInsumosUseCase;
-        _obterPecaInsumoPorIdUseCase = obterPecaInsumoPorIdUseCase;
-        _criarPecaInsumoUseCase = criarPecaInsumoUseCase;
-        _atualizarPecaInsumoUseCase = atualizarPecaInsumoUseCase;
-        _removerPecaInsumoUseCase = removerPecaInsumoUseCase;
+        _pecasCleanController = pecasCleanController;
     }
 
     [HttpGet]
     [ProducesResponseType(typeof(List<PecaInsumoResponseDto>), StatusCodes.Status200OK)]
     public IActionResult Get()
     {
-        return Ok(_obterTodasPecasInsumosUseCase.Executar().Select(MapearResponse).ToList());
+        return Ok(_pecasCleanController.ObterTodas());
     }
 
     [HttpGet("{id:guid}")]
@@ -42,9 +29,9 @@ public class PecasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult GetById(Guid id)
     {
-        var pecaInsumo = _obterPecaInsumoPorIdUseCase.Executar(id);
+        var pecaInsumo = _pecasCleanController.ObterPorId(id);
 
-        return pecaInsumo is null ? NotFound() : Ok(MapearResponse(pecaInsumo));
+        return pecaInsumo is null ? NotFound() : Ok(pecaInsumo);
     }
 
     [HttpPost]
@@ -55,12 +42,7 @@ public class PecasController : ControllerBase
     {
         try
         {
-            var input = new PecaInsumoInput(
-                pecaInsumoRequestDto.Nome,
-                pecaInsumoRequestDto.Descricao,
-                pecaInsumoRequestDto.PrecoUnitario,
-                pecaInsumoRequestDto.QuantidadeEstoque);
-            var pecaInsumo = MapearResponse(_criarPecaInsumoUseCase.Executar(input));
+            var pecaInsumo = _pecasCleanController.Criar(pecaInsumoRequestDto);
             return CreatedAtAction(nameof(GetById), new { id = pecaInsumo.Id }, pecaInsumo);
         }
         catch (InvalidOperationException ex)
@@ -78,14 +60,9 @@ public class PecasController : ControllerBase
     {
         try
         {
-            var input = new PecaInsumoInput(
-                pecaInsumoRequestDto.Nome,
-                pecaInsumoRequestDto.Descricao,
-                pecaInsumoRequestDto.PrecoUnitario,
-                pecaInsumoRequestDto.QuantidadeEstoque);
-            var pecaInsumo = _atualizarPecaInsumoUseCase.Executar(id, input);
+            var pecaInsumo = _pecasCleanController.Atualizar(id, pecaInsumoRequestDto);
 
-            return pecaInsumo is null ? NotFound() : Ok(MapearResponse(pecaInsumo));
+            return pecaInsumo is null ? NotFound() : Ok(pecaInsumo);
         }
         catch (InvalidOperationException ex)
         {
@@ -98,20 +75,8 @@ public class PecasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult Delete(Guid id)
     {
-        var removido = _removerPecaInsumoUseCase.Executar(id);
+        var removido = _pecasCleanController.Remover(id);
 
         return removido ? NoContent() : NotFound();
-    }
-
-    private static PecaInsumoResponseDto MapearResponse(PecaInsumoOutput pecaInsumo)
-    {
-        return new PecaInsumoResponseDto
-        {
-            Id = pecaInsumo.Id,
-            Nome = pecaInsumo.Nome,
-            Descricao = pecaInsumo.Descricao,
-            PrecoUnitario = pecaInsumo.PrecoUnitario,
-            QuantidadeEstoque = pecaInsumo.QuantidadeEstoque
-        };
     }
 }

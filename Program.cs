@@ -12,6 +12,7 @@ using OficinaMecanica.Api.Application.Settings;
 using OficinaMecanica.Api.Infrastructure.Gateways;
 using Microsoft.EntityFrameworkCore;
 using OficinaMecanica.Api.Infrastructure.Persistence;
+using OficinaMecanica.Api.InterfaceAdapters.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
@@ -82,6 +83,12 @@ builder.Services.AddScoped<RecusarOrcamentoUseCase>();
 builder.Services.AddScoped<CancelarOrdemServicoUseCase>();
 builder.Services.AddScoped<FinalizarOrdemServicoUseCase>();
 builder.Services.AddScoped<EntregarOrdemServicoUseCase>();
+builder.Services.AddScoped<AuthCleanController>();
+builder.Services.AddScoped<ClientesCleanController>();
+builder.Services.AddScoped<VeiculosCleanController>();
+builder.Services.AddScoped<ServicosCleanController>();
+builder.Services.AddScoped<PecasCleanController>();
+builder.Services.AddScoped<OrdensServicoCleanController>();
 
 var app = builder.Build();
 

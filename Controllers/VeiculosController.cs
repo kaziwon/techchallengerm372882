@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Api.Application.DTOs;
-using OficinaMecanica.Api.Application.UseCases.Veiculos;
+using OficinaMecanica.Api.InterfaceAdapters.Controllers;
 
 namespace OficinaMecanica.Api.Controllers;
 
@@ -10,31 +10,18 @@ namespace OficinaMecanica.Api.Controllers;
 [Authorize]
 public class VeiculosController : ControllerBase
 {
-    private readonly ObterTodosVeiculosUseCase _obterTodosVeiculosUseCase;
-    private readonly ObterVeiculoPorIdUseCase _obterVeiculoPorIdUseCase;
-    private readonly CriarVeiculoUseCase _criarVeiculoUseCase;
-    private readonly AtualizarVeiculoUseCase _atualizarVeiculoUseCase;
-    private readonly RemoverVeiculoUseCase _removerVeiculoUseCase;
+    private readonly VeiculosCleanController _veiculosCleanController;
 
-    public VeiculosController(
-        ObterTodosVeiculosUseCase obterTodosVeiculosUseCase,
-        ObterVeiculoPorIdUseCase obterVeiculoPorIdUseCase,
-        CriarVeiculoUseCase criarVeiculoUseCase,
-        AtualizarVeiculoUseCase atualizarVeiculoUseCase,
-        RemoverVeiculoUseCase removerVeiculoUseCase)
+    public VeiculosController(VeiculosCleanController veiculosCleanController)
     {
-        _obterTodosVeiculosUseCase = obterTodosVeiculosUseCase;
-        _obterVeiculoPorIdUseCase = obterVeiculoPorIdUseCase;
-        _criarVeiculoUseCase = criarVeiculoUseCase;
-        _atualizarVeiculoUseCase = atualizarVeiculoUseCase;
-        _removerVeiculoUseCase = removerVeiculoUseCase;
+        _veiculosCleanController = veiculosCleanController;
     }
 
     [HttpGet]
     [ProducesResponseType(typeof(List<VeiculoResponseDto>), StatusCodes.Status200OK)]
     public IActionResult Get()
     {
-        return Ok(_obterTodosVeiculosUseCase.Executar().Select(MapearResponse).ToList());
+        return Ok(_veiculosCleanController.ObterTodos());
     }
 
     [HttpGet("{id:guid}")]
@@ -42,9 +29,9 @@ public class VeiculosController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult GetById(Guid id)
     {
-        var veiculo = _obterVeiculoPorIdUseCase.Executar(id);
+        var veiculo = _veiculosCleanController.ObterPorId(id);
 
-        return veiculo is null ? NotFound() : Ok(MapearResponse(veiculo));
+        return veiculo is null ? NotFound() : Ok(veiculo);
     }
 
     [HttpPost]
@@ -55,13 +42,7 @@ public class VeiculosController : ControllerBase
     {
         try
         {
-            var input = new VeiculoInput(
-                veiculoRequestDto.ClienteId,
-                veiculoRequestDto.Placa,
-                veiculoRequestDto.Marca,
-                veiculoRequestDto.Modelo,
-                veiculoRequestDto.Ano);
-            var veiculo = MapearResponse(_criarVeiculoUseCase.Executar(input));
+            var veiculo = _veiculosCleanController.Criar(veiculoRequestDto);
             return CreatedAtAction(nameof(GetById), new { id = veiculo.Id }, veiculo);
         }
         catch (InvalidOperationException ex)
@@ -79,15 +60,9 @@ public class VeiculosController : ControllerBase
     {
         try
         {
-            var input = new VeiculoInput(
-                veiculoRequestDto.ClienteId,
-                veiculoRequestDto.Placa,
-                veiculoRequestDto.Marca,
-                veiculoRequestDto.Modelo,
-                veiculoRequestDto.Ano);
-            var veiculo = _atualizarVeiculoUseCase.Executar(id, input);
+            var veiculo = _veiculosCleanController.Atualizar(id, veiculoRequestDto);
 
-            return veiculo is null ? NotFound() : Ok(MapearResponse(veiculo));
+            return veiculo is null ? NotFound() : Ok(veiculo);
         }
         catch (InvalidOperationException ex)
         {
@@ -100,21 +75,8 @@ public class VeiculosController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult Delete(Guid id)
     {
-        var removido = _removerVeiculoUseCase.Executar(id);
+        var removido = _veiculosCleanController.Remover(id);
 
         return removido ? NoContent() : NotFound();
-    }
-
-    private static VeiculoResponseDto MapearResponse(VeiculoOutput veiculo)
-    {
-        return new VeiculoResponseDto
-        {
-            Id = veiculo.Id,
-            ClienteId = veiculo.ClienteId,
-            Placa = veiculo.Placa,
-            Marca = veiculo.Marca,
-            Modelo = veiculo.Modelo,
-            Ano = veiculo.Ano
-        };
     }
 }
