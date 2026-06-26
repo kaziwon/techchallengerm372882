@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using OficinaMecanica.Api.Application.DTOs;
+using OficinaMecanica.Api.InterfaceAdapters.DTOs;
 
 namespace OficinaMecanica.Api.IntegrationTests;
 
@@ -17,7 +17,7 @@ public class AuthEndpointsTests
             Username = "admin",
             Password = "Admin@123"
         });
-        var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponseDto>(JsonTestOptions.Value);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(loginResponse);

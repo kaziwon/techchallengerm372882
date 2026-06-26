@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using OficinaMecanica.Api.Application.DTOs;
+using OficinaMecanica.Api.InterfaceAdapters.DTOs;
 using OficinaMecanica.Api.Domain.Entities;
 
 namespace OficinaMecanica.Api.IntegrationTests;
@@ -25,7 +25,7 @@ public class OrdemServicoEndpointsTests
             VeiculoId = veiculo.Id
         });
         var responseContent = await response.Content.ReadAsStringAsync();
-        var ordem = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>();
+        var ordem = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>(JsonTestOptions.Value);
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         Assert.NotNull(ordem);
@@ -63,7 +63,7 @@ public class OrdemServicoEndpointsTests
                 Ano = 2023
             }
         });
-        var ordem = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>();
+        var ordem = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>(JsonTestOptions.Value);
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         Assert.NotNull(ordem);
@@ -98,7 +98,7 @@ public class OrdemServicoEndpointsTests
                 }
             ]
         });
-        var ordem = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>();
+        var ordem = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>(JsonTestOptions.Value);
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         Assert.NotNull(ordem);
@@ -124,7 +124,7 @@ public class OrdemServicoEndpointsTests
         var ordem = await CriarOrdemServico(client, cliente, veiculo);
 
         var response = await client.PostAsync($"/api/ordensservico/{ordem.Id}/iniciar-diagnostico", null);
-        var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>();
+        var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>(JsonTestOptions.Value);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(ordemAtualizada);
@@ -147,7 +147,7 @@ public class OrdemServicoEndpointsTests
         await client.PostAsync($"/api/ordensservico/{ordem.Id}/iniciar-diagnostico", null);
 
         var response = await EnviarOrcamento(client, ordem.Id, servico.Id, peca.Id);
-        var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>();
+        var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>(JsonTestOptions.Value);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(ordemAtualizada);
@@ -192,7 +192,7 @@ public class OrdemServicoEndpointsTests
         await EnviarOrcamento(client, ordem.Id, servico.Id, peca.Id);
 
         var response = await client.PostAsync($"/api/ordensservico/{ordem.Id}/aprovar-orcamento", null);
-        var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>();
+        var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>(JsonTestOptions.Value);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(ordemAtualizada);
@@ -241,7 +241,7 @@ public class OrdemServicoEndpointsTests
         {
             MotivoRecusa = "Quero revisar o valor"
         });
-        var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>();
+        var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>(JsonTestOptions.Value);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(ordemAtualizada);
@@ -267,7 +267,7 @@ public class OrdemServicoEndpointsTests
         await client.PostAsync($"/api/ordensservico/{ordem.Id}/aprovar-orcamento", null);
 
         var response = await client.PostAsync($"/api/ordensservico/{ordem.Id}/cancelar", null);
-        var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>();
+        var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>(JsonTestOptions.Value);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(ordemAtualizada);
@@ -316,7 +316,7 @@ public class OrdemServicoEndpointsTests
         await client.PostAsync($"/api/ordensservico/{ordem.Id}/finalizar", null);
 
         var response = await client.PostAsync($"/api/ordensservico/{ordem.Id}/entregar", null);
-        var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>();
+        var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>(JsonTestOptions.Value);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(ordemAtualizada);
@@ -338,7 +338,7 @@ public class OrdemServicoEndpointsTests
         await CriarOrdemServico(adminClient, cliente, veiculo);
 
         var response = await client.GetAsync($"/api/ordensservico/cliente/{cliente.CpfCnpj}");
-        var ordens = await response.Content.ReadFromJsonAsync<List<OrdemServicoResponseDto>>();
+        var ordens = await response.Content.ReadFromJsonAsync<List<OrdemServicoResponseDto>>(JsonTestOptions.Value);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(ordens);
@@ -365,7 +365,7 @@ public class OrdemServicoEndpointsTests
         await client.PostAsync($"/api/ordensservico/{ordem.Id}/finalizar", null);
 
         var response = await client.GetAsync("/api/ordensservico/tempo-medio-execucao");
-        var metrica = await response.Content.ReadFromJsonAsync<TempoMedioExecucaoResponseDto>();
+        var metrica = await response.Content.ReadFromJsonAsync<TempoMedioExecucaoResponseDto>(JsonTestOptions.Value);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(metrica);
@@ -395,7 +395,7 @@ public class OrdemServicoEndpointsTests
             Telefone = "11999999999"
         });
 
-        return (await response.Content.ReadFromJsonAsync<ClienteResponseDto>())!;
+        return (await response.Content.ReadFromJsonAsync<ClienteResponseDto>(JsonTestOptions.Value))!;
     }
 
     private static async Task<ServicoResponseDto> CriarServico(HttpClient client)
@@ -407,7 +407,7 @@ public class OrdemServicoEndpointsTests
             Preco = 120m
         });
 
-        return (await response.Content.ReadFromJsonAsync<ServicoResponseDto>())!;
+        return (await response.Content.ReadFromJsonAsync<ServicoResponseDto>(JsonTestOptions.Value))!;
     }
 
     private static async Task<PecaInsumoResponseDto> CriarPeca(HttpClient client, int quantidadeEstoque = 10)
@@ -420,7 +420,7 @@ public class OrdemServicoEndpointsTests
             QuantidadeEstoque = quantidadeEstoque
         });
 
-        return (await response.Content.ReadFromJsonAsync<PecaInsumoResponseDto>())!;
+        return (await response.Content.ReadFromJsonAsync<PecaInsumoResponseDto>(JsonTestOptions.Value))!;
     }
 
     private static async Task<VeiculoResponseDto> CriarVeiculo(HttpClient client, Guid clienteId)
@@ -434,7 +434,7 @@ public class OrdemServicoEndpointsTests
             Ano = 2022
         });
 
-        return (await response.Content.ReadFromJsonAsync<VeiculoResponseDto>())!;
+        return (await response.Content.ReadFromJsonAsync<VeiculoResponseDto>(JsonTestOptions.Value))!;
     }
 
     private static async Task<OrdemServicoResponseDto> CriarOrdemServico(
@@ -448,7 +448,7 @@ public class OrdemServicoEndpointsTests
             VeiculoId = veiculo.Id
         });
 
-        return (await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>())!;
+        return (await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>(JsonTestOptions.Value))!;
     }
 
     private static Task<HttpResponseMessage> EnviarOrcamento(HttpClient client, Guid ordemServicoId, Guid servicoId, Guid pecaInsumoId)

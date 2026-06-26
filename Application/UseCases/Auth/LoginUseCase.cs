@@ -1,52 +1,31 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using OficinaMecanica.Api.Application.Settings;
+using OficinaMecanica.Api.Application.Gateways;
 
 namespace OficinaMecanica.Api.Application.UseCases.Auth;
 
 public class LoginUseCase
 {
-    private readonly JwtSettings _jwtSettings;
-    private readonly AdminUserSettings _adminUserSettings;
+    private readonly IAdminUserGateway _adminUserGateway;
+    private readonly ITokenGateway _tokenGateway;
 
-    public LoginUseCase(IOptions<JwtSettings> jwtSettings, IOptions<AdminUserSettings> adminUserSettings)
+    public LoginUseCase(IAdminUserGateway adminUserGateway, ITokenGateway tokenGateway)
     {
-        _jwtSettings = jwtSettings.Value;
-        _adminUserSettings = adminUserSettings.Value;
+        _adminUserGateway = adminUserGateway;
+        _tokenGateway = tokenGateway;
     }
 
     public LoginOutput? Executar(LoginInput input)
     {
-        if (input.Username != _adminUserSettings.Username || input.Password != _adminUserSettings.Password)
+        if (!_adminUserGateway.CredenciaisValidas(input.Username, input.Password))
         {
             return null;
         }
 
-        var expiresAt = DateTime.UtcNow.AddHours(2);
-        Claim[] claims =
-        [
-            new Claim(ClaimTypes.Name, input.Username),
-            new Claim(ClaimTypes.Role, "Admin")
-        ];
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var tokenDescriptor = new JwtSecurityToken(
-            issuer: _jwtSettings.Issuer,
-            audience: _jwtSettings.Audience,
-            claims: claims,
-            expires: expiresAt,
-            signingCredentials: credentials);
-
-        var token = new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
+        var token = _tokenGateway.GerarToken(input.Username, "Admin");
 
         return new LoginOutput
         {
-            Token = token,
-            ExpiresAt = expiresAt
+            Token = token.Token,
+            ExpiresAt = token.ExpiresAt
         };
     }
 }

@@ -1,3 +1,4 @@
+using OficinaMecanica.Api.Application.Exceptions;
 using OficinaMecanica.Api.Application.Gateways;
 using OficinaMecanica.Api.Domain.Entities;
 
@@ -6,6 +7,8 @@ namespace OficinaMecanica.Api.Application.UseCases.OrdensServico;
 public class CriarOrdemServicoUseCase
 {
     private const string DadosCriacaoInvalidos = "Informe CpfCnpj e VeiculoId para usar cadastro existente, ou Cliente e Veiculo para criar cadastro completo.";
+    private const string CpfCnpjInvalido = "O CPF/CNPJ informado é inválido.";
+    private const string PlacaInvalida = "A placa informada é inválida.";
     private const string ClienteNaoEncontrado = "Cliente nao encontrado para o CPF/CNPJ informado.";
     private const string VeiculoNaoEncontrado = "Veiculo nao encontrado.";
     private const string VeiculoNaoPertenceAoCliente = "O veiculo informado nao pertence ao cliente.";
@@ -16,19 +19,25 @@ public class CriarOrdemServicoUseCase
     private readonly IVeiculoGateway _veiculoGateway;
     private readonly IServicoGateway _servicoGateway;
     private readonly IPecaInsumoGateway _pecaInsumoGateway;
+    private readonly ICpfCnpjValidatorGateway _cpfCnpjValidatorGateway;
+    private readonly IPlacaVeiculoValidatorGateway _placaVeiculoValidatorGateway;
 
     public CriarOrdemServicoUseCase(
         IOrdemServicoGateway ordemServicoGateway,
         IClienteGateway clienteGateway,
         IVeiculoGateway veiculoGateway,
         IServicoGateway servicoGateway,
-        IPecaInsumoGateway pecaInsumoGateway)
+        IPecaInsumoGateway pecaInsumoGateway,
+        ICpfCnpjValidatorGateway cpfCnpjValidatorGateway,
+        IPlacaVeiculoValidatorGateway placaVeiculoValidatorGateway)
     {
         _ordemServicoGateway = ordemServicoGateway;
         _clienteGateway = clienteGateway;
         _veiculoGateway = veiculoGateway;
         _servicoGateway = servicoGateway;
         _pecaInsumoGateway = pecaInsumoGateway;
+        _cpfCnpjValidatorGateway = cpfCnpjValidatorGateway;
+        _placaVeiculoValidatorGateway = placaVeiculoValidatorGateway;
     }
 
     public OrdemServicoOutput Executar(CriarOrdemServicoInput input)
@@ -74,12 +83,13 @@ public class CriarOrdemServicoUseCase
             return CriarClienteEVeiculo(input);
         }
 
-        throw new InvalidOperationException(DadosCriacaoInvalidos);
+        throw new ValidacaoException(DadosCriacaoInvalidos);
     }
 
     private (Cliente Cliente, Veiculo Veiculo) ObterClienteEVeiculoExistentes(CriarOrdemServicoInput input)
     {
-        var cliente = _clienteGateway.ObterPorCpfCnpj(NormalizarCpfCnpj(input.CpfCnpj!));
+        var cpfCnpj = ValidarCpfCnpj(input.CpfCnpj!);
+        var cliente = _clienteGateway.ObterPorCpfCnpj(cpfCnpj);
 
         if (cliente is null)
         {
@@ -105,8 +115,8 @@ public class CriarOrdemServicoUseCase
     {
         var clienteInput = input.Cliente!;
         var veiculoInput = input.Veiculo!;
-        var cpfCnpj = NormalizarCpfCnpj(clienteInput.CpfCnpj);
-        var placa = NormalizarPlaca(veiculoInput.Placa);
+        var cpfCnpj = ValidarCpfCnpj(clienteInput.CpfCnpj);
+        var placa = ValidarPlaca(veiculoInput.Placa);
 
         if (_clienteGateway.ExistePorCpfCnpj(cpfCnpj))
         {
@@ -156,13 +166,23 @@ public class CriarOrdemServicoUseCase
             && input.Veiculo is not null;
     }
 
-    private static string NormalizarCpfCnpj(string cpfCnpj)
+    private string ValidarCpfCnpj(string cpfCnpj)
     {
-        return new string(cpfCnpj.Where(char.IsDigit).ToArray());
+        if (!_cpfCnpjValidatorGateway.EhValido(cpfCnpj))
+        {
+            throw new ValidacaoException(CpfCnpjInvalido);
+        }
+
+        return _cpfCnpjValidatorGateway.Normalizar(cpfCnpj);
     }
 
-    private static string NormalizarPlaca(string placa)
+    private string ValidarPlaca(string placa)
     {
-        return placa.Trim().ToUpperInvariant().Replace("-", "");
+        if (!_placaVeiculoValidatorGateway.EhValida(placa))
+        {
+            throw new ValidacaoException(PlacaInvalida);
+        }
+
+        return _placaVeiculoValidatorGateway.Normalizar(placa);
     }
 }

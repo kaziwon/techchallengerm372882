@@ -1,3 +1,4 @@
+using OficinaMecanica.Api.Application.Exceptions;
 using OficinaMecanica.Api.Application.Gateways;
 using OficinaMecanica.Api.Domain.Entities;
 
@@ -5,24 +6,30 @@ namespace OficinaMecanica.Api.Application.UseCases.Veiculos;
 
 public class CriarVeiculoUseCase
 {
+    private const string PlacaInvalida = "A placa informada é inválida.";
     private const string PlacaJaCadastrada = "Ja existe um veiculo cadastrado com esta placa.";
     private const string ClienteNaoEncontrado = "O cliente informado nao foi encontrado.";
     private readonly IVeiculoGateway _veiculoGateway;
+    private readonly IPlacaVeiculoValidatorGateway _placaVeiculoValidatorGateway;
 
-    public CriarVeiculoUseCase(IVeiculoGateway veiculoGateway)
+    public CriarVeiculoUseCase(
+        IVeiculoGateway veiculoGateway,
+        IPlacaVeiculoValidatorGateway placaVeiculoValidatorGateway)
     {
         _veiculoGateway = veiculoGateway;
+        _placaVeiculoValidatorGateway = placaVeiculoValidatorGateway;
     }
 
     public VeiculoOutput Executar(VeiculoInput input)
     {
-        ValidarClienteEPlaca(input.ClienteId, input.Placa);
+        var placa = ValidarPlaca(input.Placa);
+        ValidarClienteEPlaca(input.ClienteId, placa);
 
         var veiculo = new Veiculo
         {
             Id = Guid.NewGuid(),
             ClienteId = input.ClienteId,
-            Placa = NormalizarPlaca(input.Placa),
+            Placa = placa,
             Marca = input.Marca,
             Modelo = input.Modelo,
             Ano = input.Ano
@@ -44,8 +51,13 @@ public class CriarVeiculoUseCase
         }
     }
 
-    private static string NormalizarPlaca(string placa)
+    private string ValidarPlaca(string placa)
     {
-        return placa.Trim().ToUpperInvariant().Replace("-", "");
+        if (!_placaVeiculoValidatorGateway.EhValida(placa))
+        {
+            throw new ValidacaoException(PlacaInvalida);
+        }
+
+        return _placaVeiculoValidatorGateway.Normalizar(placa);
     }
 }

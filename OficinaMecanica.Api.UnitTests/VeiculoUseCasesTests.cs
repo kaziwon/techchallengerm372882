@@ -1,4 +1,5 @@
 using OficinaMecanica.Api.Application.Gateways;
+using OficinaMecanica.Api.Application.Exceptions;
 using OficinaMecanica.Api.Application.UseCases.Veiculos;
 using OficinaMecanica.Api.Domain.Entities;
 
@@ -10,7 +11,7 @@ public class VeiculoUseCasesTests
     public void Criar_DeveLancarExcecao_QuandoClienteNaoExistir()
     {
         var gateway = new FakeVeiculoGateway();
-        var useCase = new CriarVeiculoUseCase(gateway);
+        var useCase = new CriarVeiculoUseCase(gateway, new FakePlacaVeiculoValidatorGateway());
 
         Assert.Throws<InvalidOperationException>(() => useCase.Executar(CriarInput()));
     }
@@ -23,7 +24,7 @@ public class VeiculoUseCasesTests
             ClienteExisteResult = true,
             ExistePorPlacaResult = true
         };
-        var useCase = new CriarVeiculoUseCase(gateway);
+        var useCase = new CriarVeiculoUseCase(gateway, new FakePlacaVeiculoValidatorGateway());
 
         Assert.Throws<InvalidOperationException>(() => useCase.Executar(CriarInput()));
     }
@@ -35,7 +36,7 @@ public class VeiculoUseCasesTests
         {
             ClienteExisteResult = true
         };
-        var useCase = new CriarVeiculoUseCase(gateway);
+        var useCase = new CriarVeiculoUseCase(gateway, new FakePlacaVeiculoValidatorGateway());
 
         var output = useCase.Executar(CriarInput("abc-1d23"));
 
@@ -50,7 +51,7 @@ public class VeiculoUseCasesTests
         {
             ClienteExisteResult = true
         };
-        var useCase = new AtualizarVeiculoUseCase(gateway);
+        var useCase = new AtualizarVeiculoUseCase(gateway, new FakePlacaVeiculoValidatorGateway());
 
         var output = useCase.Executar(Guid.NewGuid(), CriarInput());
 
@@ -60,6 +61,22 @@ public class VeiculoUseCasesTests
     private static VeiculoInput CriarInput(string placa = "BRA2E19")
     {
         return new VeiculoInput(Guid.NewGuid(), placa, "Toyota", "Corolla", 2022);
+    }
+
+    [Fact]
+    public void Criar_DeveLancarValidacaoException_QuandoPlacaForInvalida()
+    {
+        var gateway = new FakeVeiculoGateway
+        {
+            ClienteExisteResult = true
+        };
+        var placaValidator = new FakePlacaVeiculoValidatorGateway
+        {
+            EhValidaResult = false
+        };
+        var useCase = new CriarVeiculoUseCase(gateway, placaValidator);
+
+        Assert.Throws<ValidacaoException>(() => useCase.Executar(CriarInput()));
     }
 
     private sealed class FakeVeiculoGateway : IVeiculoGateway

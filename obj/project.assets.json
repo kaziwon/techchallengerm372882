@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "targets": {
     "net10.0": {
       "BrazilianDocuments/2.0.0": {
@@ -2804,19 +2804,19 @@
     ]
   },
   "packageFolders": {
-    "/Users/jcabral/.nuget/packages/": {}
+    "/Users/joaocabral/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.csproj",
+      "projectUniqueName": "/Users/joaocabral/Desktop/Repositorios/Fiap/tech_challenge/techchallengerm372882/OficinaMecanica.Api.csproj",
       "projectName": "OficinaMecanica.Api",
-      "projectPath": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/OficinaMecanica.Api.csproj",
-      "packagesPath": "/Users/jcabral/.nuget/packages/",
-      "outputPath": "/Users/jcabral/tech_challenge_rm372882/OficinaMecanica.Api/obj/",
+      "projectPath": "/Users/joaocabral/Desktop/Repositorios/Fiap/tech_challenge/techchallengerm372882/OficinaMecanica.Api.csproj",
+      "packagesPath": "/Users/joaocabral/.nuget/packages/",
+      "outputPath": "/Users/joaocabral/Desktop/Repositorios/Fiap/tech_challenge/techchallengerm372882/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/jcabral/.nuget/NuGet/NuGet.Config"
+        "/Users/joaocabral/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
@@ -2826,6 +2826,7 @@
       },
       "frameworks": {
         "net10.0": {
+          "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {}
         }
@@ -2840,10 +2841,11 @@
         "auditLevel": "low",
         "auditMode": "all"
       },
-      "SdkAnalysisLevel": "10.0.100"
+      "SdkAnalysisLevel": "10.0.300"
     },
     "frameworks": {
       "net10.0": {
+        "framework": "net10.0",
         "targetAlias": "net10.0",
         "dependencies": {
           "BrazilianDocuments": {
@@ -2896,7 +2898,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.103/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.301/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

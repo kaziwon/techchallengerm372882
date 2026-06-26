@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using OficinaMecanica.Api.Application.Gateways;
@@ -8,18 +9,24 @@ using OficinaMecanica.Api.Application.UseCases.OrdensServico;
 using OficinaMecanica.Api.Application.UseCases.PecasInsumos;
 using OficinaMecanica.Api.Application.UseCases.Servicos;
 using OficinaMecanica.Api.Application.UseCases.Veiculos;
-using OficinaMecanica.Api.Application.Settings;
-using OficinaMecanica.Api.Infrastructure.Gateways;
+using OficinaMecanica.Api.InterfaceAdapters.DataSources;
+using OficinaMecanica.Api.Infrastructure.Settings;
+using OficinaMecanica.Api.Infrastructure.Sources;
 using Microsoft.EntityFrameworkCore;
 using OficinaMecanica.Api.Infrastructure.Persistence;
 using OficinaMecanica.Api.InterfaceAdapters.Controllers;
+using OficinaMecanica.Api.InterfaceAdapters.Gateways;
 
 var builder = WebApplication.CreateBuilder(args);
 var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
 var jwtSettings = jwtSettingsSection.Get<JwtSettings>()!;
 var jwtKey = Encoding.UTF8.GetBytes(jwtSettings.SecretKey);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -45,11 +52,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 
+builder.Services.AddScoped<IClienteDataSource, EfClienteDataSource>();
+builder.Services.AddScoped<IVeiculoDataSource, EfVeiculoDataSource>();
+builder.Services.AddScoped<IServicoDataSource, EfServicoDataSource>();
+builder.Services.AddScoped<IPecaInsumoDataSource, EfPecaInsumoDataSource>();
+builder.Services.AddScoped<IOrdemServicoDataSource, EfOrdemServicoDataSource>();
+builder.Services.AddScoped<IAdminUserSource, AdminUserSettingsSource>();
+builder.Services.AddScoped<ITokenSource, JwtTokenSource>();
+builder.Services.AddScoped<ICpfCnpjValidatorSource, CpfCnpjValidatorSource>();
+builder.Services.AddScoped<IPlacaVeiculoValidatorSource, BrazilianDocumentsPlacaVeiculoValidatorSource>();
 builder.Services.AddScoped<IClienteGateway, ClienteGateway>();
 builder.Services.AddScoped<IVeiculoGateway, VeiculoGateway>();
 builder.Services.AddScoped<IServicoGateway, ServicoGateway>();
 builder.Services.AddScoped<IPecaInsumoGateway, PecaInsumoGateway>();
 builder.Services.AddScoped<IOrdemServicoGateway, OrdemServicoGateway>();
+builder.Services.AddScoped<IAdminUserGateway, AdminUserGateway>();
+builder.Services.AddScoped<ITokenGateway, TokenGateway>();
+builder.Services.AddScoped<ICpfCnpjValidatorGateway, CpfCnpjValidatorGateway>();
+builder.Services.AddScoped<IPlacaVeiculoValidatorGateway, PlacaVeiculoValidatorGateway>();
 builder.Services.AddScoped<LoginUseCase>();
 builder.Services.AddScoped<ObterTodosClientesUseCase>();
 builder.Services.AddScoped<ObterClientePorIdUseCase>();

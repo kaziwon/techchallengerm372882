@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using OficinaMecanica.Api.Application.DTOs;
+using OficinaMecanica.Api.InterfaceAdapters.DTOs;
 
 namespace OficinaMecanica.Api.IntegrationTests;
 
@@ -27,7 +27,7 @@ public class ClienteEndpointsTests
         var request = CriarRequest();
 
         var response = await client.PostAsJsonAsync("/api/clientes", request);
-        var cliente = await response.Content.ReadFromJsonAsync<ClienteResponseDto>();
+        var cliente = await response.Content.ReadFromJsonAsync<ClienteResponseDto>(JsonTestOptions.Value);
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         Assert.NotNull(cliente);
@@ -75,7 +75,7 @@ public class ClienteEndpointsTests
         await AuthTestHelper.AuthenticateAsync(client);
         var request = CriarRequest();
         var createResponse = await client.PostAsJsonAsync("/api/clientes", request);
-        var clienteCriado = await createResponse.Content.ReadFromJsonAsync<ClienteResponseDto>();
+        var clienteCriado = await createResponse.Content.ReadFromJsonAsync<ClienteResponseDto>(JsonTestOptions.Value);
         var updateRequest = new ClienteRequestDto
         {
             Nome = "Joao Silva Atualizado",
@@ -85,7 +85,7 @@ public class ClienteEndpointsTests
         };
 
         var response = await client.PutAsJsonAsync($"/api/clientes/{clienteCriado!.Id}", updateRequest);
-        var clienteAtualizado = await response.Content.ReadFromJsonAsync<ClienteResponseDto>();
+        var clienteAtualizado = await response.Content.ReadFromJsonAsync<ClienteResponseDto>(JsonTestOptions.Value);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(clienteAtualizado);
@@ -100,7 +100,7 @@ public class ClienteEndpointsTests
         await AuthTestHelper.AuthenticateAsync(client);
         var request = CriarRequest();
         var createResponse = await client.PostAsJsonAsync("/api/clientes", request);
-        var clienteCriado = await createResponse.Content.ReadFromJsonAsync<ClienteResponseDto>();
+        var clienteCriado = await createResponse.Content.ReadFromJsonAsync<ClienteResponseDto>(JsonTestOptions.Value);
 
         var deleteResponse = await client.DeleteAsync($"/api/clientes/{clienteCriado!.Id}");
         var getResponse = await client.GetAsync($"/api/clientes/{clienteCriado.Id}");

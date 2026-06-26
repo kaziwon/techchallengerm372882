@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OficinaMecanica.Api.Application.DTOs;
+using OficinaMecanica.Api.Controllers.Mappers;
 using OficinaMecanica.Api.InterfaceAdapters.Controllers;
+using OficinaMecanica.Api.InterfaceAdapters.DTOs;
+using HttpDtos = OficinaMecanica.Api.Controllers.DTOs;
 
 namespace OficinaMecanica.Api.Controllers;
 
@@ -38,11 +40,11 @@ public class ServicosController : ControllerBase
     [ProducesResponseType(typeof(ServicoResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public IActionResult Post([FromBody] ServicoRequestDto servicoRequestDto)
+    public IActionResult Post([FromBody] HttpDtos.ServicoRequestDto servicoRequestDto)
     {
         try
         {
-            var servico = _servicosCleanController.Criar(servicoRequestDto);
+            var servico = _servicosCleanController.Criar(servicoRequestDto.ParaCleanDto());
             return CreatedAtAction(nameof(GetById), new { id = servico.Id }, servico);
         }
         catch (InvalidOperationException ex)
@@ -56,11 +58,11 @@ public class ServicosController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public IActionResult Put(Guid id, [FromBody] ServicoRequestDto servicoRequestDto)
+    public IActionResult Put(Guid id, [FromBody] HttpDtos.ServicoRequestDto servicoRequestDto)
     {
         try
         {
-            var servico = _servicosCleanController.Atualizar(id, servicoRequestDto);
+            var servico = _servicosCleanController.Atualizar(id, servicoRequestDto.ParaCleanDto());
 
             return servico is null ? NotFound() : Ok(servico);
         }

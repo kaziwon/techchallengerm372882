@@ -1,5 +1,5 @@
-using System.ComponentModel.DataAnnotations;
-using OficinaMecanica.Api.Application.Validators;
+using OficinaMecanica.Api.Infrastructure.Sources;
+using OficinaMecanica.Api.InterfaceAdapters.Gateways;
 
 namespace OficinaMecanica.Api.UnitTests;
 
@@ -10,13 +10,11 @@ public class ValidatorsTests
     [InlineData("529.982.247-25")]
     [InlineData("11222333000181")]
     [InlineData("11.222.333/0001-81")]
-    public void CpfCnpjAttribute_DeveAceitarDocumentosValidos(string valor)
+    public void CpfCnpjValidatorGateway_DeveAceitarDocumentosValidos(string valor)
     {
-        var attribute = new CpfCnpjAttribute();
+        var validator = new CpfCnpjValidatorGateway(new CpfCnpjValidatorSource());
 
-        var result = attribute.GetValidationResult(valor, new ValidationContext(new object()));
-
-        Assert.Equal(ValidationResult.Success, result);
+        Assert.True(validator.EhValido(valor));
     }
 
     [Theory]
@@ -24,37 +22,31 @@ public class ValidatorsTests
     [InlineData("11111111111")]
     [InlineData("12345678901")]
     [InlineData("11222333000100")]
-    public void CpfCnpjAttribute_DeveRejeitarDocumentosInvalidos(string valor)
+    public void CpfCnpjValidatorGateway_DeveRejeitarDocumentosInvalidos(string valor)
     {
-        var attribute = new CpfCnpjAttribute();
+        var validator = new CpfCnpjValidatorGateway(new CpfCnpjValidatorSource());
 
-        var result = attribute.GetValidationResult(valor, new ValidationContext(new object()));
-
-        Assert.NotEqual(ValidationResult.Success, result);
+        Assert.False(validator.EhValido(valor));
     }
 
     [Theory]
     [InlineData("BRA2E19")]
     [InlineData("ABC-1234")]
-    public void PlacaVeiculoAttribute_DeveAceitarPlacasValidas(string valor)
+    public void PlacaVeiculoValidatorGateway_DeveAceitarPlacasValidas(string valor)
     {
-        var attribute = new PlacaVeiculoAttribute();
+        var validator = new PlacaVeiculoValidatorGateway(new BrazilianDocumentsPlacaVeiculoValidatorSource());
 
-        var result = attribute.GetValidationResult(valor, new ValidationContext(new object()));
-
-        Assert.Equal(ValidationResult.Success, result);
+        Assert.True(validator.EhValida(valor));
     }
 
     [Theory]
     [InlineData("")]
     [InlineData("AAA000")]
     [InlineData("1234567")]
-    public void PlacaVeiculoAttribute_DeveRejeitarPlacasInvalidas(string valor)
+    public void PlacaVeiculoValidatorGateway_DeveRejeitarPlacasInvalidas(string valor)
     {
-        var attribute = new PlacaVeiculoAttribute();
+        var validator = new PlacaVeiculoValidatorGateway(new BrazilianDocumentsPlacaVeiculoValidatorSource());
 
-        var result = attribute.GetValidationResult(valor, new ValidationContext(new object()));
-
-        Assert.NotEqual(ValidationResult.Success, result);
+        Assert.False(validator.EhValida(valor));
     }
 }

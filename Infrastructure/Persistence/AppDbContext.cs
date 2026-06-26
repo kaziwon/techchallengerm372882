@@ -59,5 +59,9 @@ public class AppDbContext : DbContext
             .HasOne(item => item.OrdemServico)
             .WithMany(ordemServico => ordemServico.ItensPecaInsumo)
             .HasForeignKey(item => item.OrdemServicoId);
+
+        modelBuilder.Entity<OrdemServico>()
+            .Property(ordemServico => ordemServico.EnvioOrcamento)
+            .HasColumnName("MockEnvioOrcamento");
     }
 }

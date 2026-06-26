@@ -1,7 +1,4 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using Microsoft.Extensions.Options;
-using OficinaMecanica.Api.Application.Settings;
+using OficinaMecanica.Api.Application.Gateways;
 using OficinaMecanica.Api.Application.UseCases.Auth;
 
 namespace OficinaMecanica.Api.UnitTests;
@@ -28,28 +25,31 @@ public class AuthUseCaseTests
         Assert.NotNull(response);
         Assert.False(string.IsNullOrWhiteSpace(response.Token));
         Assert.True(response.ExpiresAt > DateTime.UtcNow);
-
-        var token = new JwtSecurityTokenHandler().ReadJwtToken(response.Token);
-
-        Assert.Equal("OficinaMecanica.Api", token.Issuer);
-        Assert.Contains(token.Audiences, audience => audience == "OficinaMecanica.Api");
-        Assert.Contains(token.Claims, claim => claim.Type == ClaimTypes.Name && claim.Value == "admin");
-        Assert.Contains(token.Claims, claim => claim.Type == ClaimTypes.Role && claim.Value == "Admin");
+        Assert.Equal("token-admin-Admin", response.Token);
     }
 
     private static LoginUseCase CriarUseCase()
     {
-        return new LoginUseCase(
-            Options.Create(new JwtSettings
+        return new LoginUseCase(new AdminUserGatewayFake(), new TokenGatewayFake());
+    }
+
+    private class AdminUserGatewayFake : IAdminUserGateway
+    {
+        public bool CredenciaisValidas(string username, string password)
+        {
+            return username == "admin" && password == "Admin@123";
+        }
+    }
+
+    private class TokenGatewayFake : ITokenGateway
+    {
+        public TokenGerado GerarToken(string username, string role)
+        {
+            return new TokenGerado
             {
-                Issuer = "OficinaMecanica.Api",
-                Audience = "OficinaMecanica.Api",
-                SecretKey = "oficina-mecanica-tech-challenge-secret-key-2026"
-            }),
-            Options.Create(new AdminUserSettings
-            {
-                Username = "admin",
-                Password = "Admin@123"
-            }));
+                Token = $"token-{username}-{role}",
+                ExpiresAt = DateTime.UtcNow.AddHours(2)
+            };
+        }
     }
 }

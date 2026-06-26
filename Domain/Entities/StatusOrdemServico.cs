@@ -1,8 +1,5 @@
-using System.Text.Json.Serialization;
-
 namespace OficinaMecanica.Api.Domain.Entities;
 
-[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum StatusOrdemServico
 {
     Recebida = 1,

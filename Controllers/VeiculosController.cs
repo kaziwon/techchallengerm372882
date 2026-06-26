@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OficinaMecanica.Api.Application.DTOs;
+using OficinaMecanica.Api.Application.Exceptions;
+using OficinaMecanica.Api.Controllers.Mappers;
 using OficinaMecanica.Api.InterfaceAdapters.Controllers;
+using OficinaMecanica.Api.InterfaceAdapters.DTOs;
+using HttpDtos = OficinaMecanica.Api.Controllers.DTOs;
 
 namespace OficinaMecanica.Api.Controllers;
 
@@ -38,12 +41,16 @@ public class VeiculosController : ControllerBase
     [ProducesResponseType(typeof(VeiculoResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public IActionResult Post([FromBody] VeiculoRequestDto veiculoRequestDto)
+    public IActionResult Post([FromBody] HttpDtos.VeiculoRequestDto veiculoRequestDto)
     {
         try
         {
-            var veiculo = _veiculosCleanController.Criar(veiculoRequestDto);
+            var veiculo = _veiculosCleanController.Criar(veiculoRequestDto.ParaCleanDto());
             return CreatedAtAction(nameof(GetById), new { id = veiculo.Id }, veiculo);
+        }
+        catch (ValidacaoException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
         catch (InvalidOperationException ex)
         {
@@ -56,13 +63,17 @@ public class VeiculosController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public IActionResult Put(Guid id, [FromBody] VeiculoRequestDto veiculoRequestDto)
+    public IActionResult Put(Guid id, [FromBody] HttpDtos.VeiculoRequestDto veiculoRequestDto)
     {
         try
         {
-            var veiculo = _veiculosCleanController.Atualizar(id, veiculoRequestDto);
+            var veiculo = _veiculosCleanController.Atualizar(id, veiculoRequestDto.ParaCleanDto());
 
             return veiculo is null ? NotFound() : Ok(veiculo);
+        }
+        catch (ValidacaoException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
         catch (InvalidOperationException ex)
         {

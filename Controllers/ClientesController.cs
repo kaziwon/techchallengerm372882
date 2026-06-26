@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OficinaMecanica.Api.Application.DTOs;
+using OficinaMecanica.Api.Application.Exceptions;
+using OficinaMecanica.Api.Controllers.Mappers;
 using OficinaMecanica.Api.InterfaceAdapters.Controllers;
+using OficinaMecanica.Api.InterfaceAdapters.DTOs;
+using HttpDtos = OficinaMecanica.Api.Controllers.DTOs;
 
 namespace OficinaMecanica.Api.Controllers;
 
@@ -43,13 +46,17 @@ public class ClientesController : ControllerBase
     [ProducesResponseType(typeof(ClienteResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public IActionResult Post([FromBody] ClienteRequestDto clienteRequestDto)
+    public IActionResult Post([FromBody] HttpDtos.ClienteRequestDto clienteRequestDto)
     {
         try
         {
-            var clienteAdicionado = _clientesCleanController.Criar(clienteRequestDto);
+            var clienteAdicionado = _clientesCleanController.Criar(clienteRequestDto.ParaCleanDto());
 
             return CreatedAtAction(nameof(GetById), new { id = clienteAdicionado.Id }, clienteAdicionado);
+        }
+        catch (ValidacaoException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
         catch (InvalidOperationException ex)
         {
@@ -62,11 +69,11 @@ public class ClientesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public IActionResult Put(Guid id, [FromBody] ClienteRequestDto clienteRequestDto)
+    public IActionResult Put(Guid id, [FromBody] HttpDtos.ClienteRequestDto clienteRequestDto)
     {
         try
         {
-            var clienteAtualizado = _clientesCleanController.Atualizar(id, clienteRequestDto);
+            var clienteAtualizado = _clientesCleanController.Atualizar(id, clienteRequestDto.ParaCleanDto());
 
             if (clienteAtualizado is null)
             {
@@ -74,6 +81,10 @@ public class ClientesController : ControllerBase
             }
 
             return Ok(clienteAtualizado);
+        }
+        catch (ValidacaoException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
         catch (InvalidOperationException ex)
         {

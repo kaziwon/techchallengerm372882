@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using OficinaMecanica.Api.Application.DTOs;
+using OficinaMecanica.Api.InterfaceAdapters.DTOs;
 
 namespace OficinaMecanica.Api.IntegrationTests;
 
@@ -60,6 +60,6 @@ public class VeiculoEndpointsTests
             Telefone = "11999999999"
         });
 
-        return (await response.Content.ReadFromJsonAsync<ClienteResponseDto>())!;
+        return (await response.Content.ReadFromJsonAsync<ClienteResponseDto>(JsonTestOptions.Value))!;
     }
 }

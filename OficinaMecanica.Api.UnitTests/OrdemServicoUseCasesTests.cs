@@ -1,4 +1,5 @@
 using OficinaMecanica.Api.Application.Gateways;
+using OficinaMecanica.Api.Application.Exceptions;
 using OficinaMecanica.Api.Application.UseCases.OrdensServico;
 using OficinaMecanica.Api.Domain.Entities;
 
@@ -127,7 +128,7 @@ public class OrdemServicoUseCasesTests
             new CriarOrdemServicoClienteInput("Ana Silva", "390.533.447-05", "ana@email.com", "11999999999"),
             null);
 
-        Assert.Throws<InvalidOperationException>(() => useCase.Executar(input));
+        Assert.Throws<ValidacaoException>(() => useCase.Executar(input));
     }
 
     [Fact]
@@ -531,6 +532,8 @@ public class OrdemServicoUseCasesTests
         public FakeVeiculoGateway VeiculoGateway { get; } = new();
         public FakeServicoGateway ServicoGateway { get; } = new();
         public FakePecaInsumoGateway PecaInsumoGateway { get; } = new();
+        public FakeCpfCnpjValidatorGateway CpfCnpjValidatorGateway { get; } = new();
+        public FakePlacaVeiculoValidatorGateway PlacaVeiculoValidatorGateway { get; } = new();
 
         public Cliente Cliente { get; set; } = new();
         public Veiculo Veiculo { get; set; } = new();
@@ -544,7 +547,9 @@ public class OrdemServicoUseCasesTests
                 ClienteGateway,
                 VeiculoGateway,
                 ServicoGateway,
-                PecaInsumoGateway);
+                PecaInsumoGateway,
+                CpfCnpjValidatorGateway,
+                PlacaVeiculoValidatorGateway);
         }
 
         public EnviarOrcamentoUseCase EnviarOrcamentoUseCase()
@@ -584,7 +589,7 @@ public class OrdemServicoUseCasesTests
 
         public ObterOrdensPorCpfCnpjClienteUseCase ObterOrdensPorCpfCnpjClienteUseCase()
         {
-            return new ObterOrdensPorCpfCnpjClienteUseCase(OrdemServicoGateway);
+            return new ObterOrdensPorCpfCnpjClienteUseCase(OrdemServicoGateway, CpfCnpjValidatorGateway);
         }
 
         public ObterTempoMedioExecucaoUseCase ObterTempoMedioExecucaoUseCase()

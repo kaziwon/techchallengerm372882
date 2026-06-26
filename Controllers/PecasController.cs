@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OficinaMecanica.Api.Application.DTOs;
+using OficinaMecanica.Api.Controllers.Mappers;
 using OficinaMecanica.Api.InterfaceAdapters.Controllers;
+using OficinaMecanica.Api.InterfaceAdapters.DTOs;
+using HttpDtos = OficinaMecanica.Api.Controllers.DTOs;
 
 namespace OficinaMecanica.Api.Controllers;
 
@@ -38,11 +40,11 @@ public class PecasController : ControllerBase
     [ProducesResponseType(typeof(PecaInsumoResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public IActionResult Post([FromBody] PecaInsumoRequestDto pecaInsumoRequestDto)
+    public IActionResult Post([FromBody] HttpDtos.PecaInsumoRequestDto pecaInsumoRequestDto)
     {
         try
         {
-            var pecaInsumo = _pecasCleanController.Criar(pecaInsumoRequestDto);
+            var pecaInsumo = _pecasCleanController.Criar(pecaInsumoRequestDto.ParaCleanDto());
             return CreatedAtAction(nameof(GetById), new { id = pecaInsumo.Id }, pecaInsumo);
         }
         catch (InvalidOperationException ex)
@@ -56,11 +58,11 @@ public class PecasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public IActionResult Put(Guid id, [FromBody] PecaInsumoRequestDto pecaInsumoRequestDto)
+    public IActionResult Put(Guid id, [FromBody] HttpDtos.PecaInsumoRequestDto pecaInsumoRequestDto)
     {
         try
         {
-            var pecaInsumo = _pecasCleanController.Atualizar(id, pecaInsumoRequestDto);
+            var pecaInsumo = _pecasCleanController.Atualizar(id, pecaInsumoRequestDto.ParaCleanDto());
 
             return pecaInsumo is null ? NotFound() : Ok(pecaInsumo);
         }

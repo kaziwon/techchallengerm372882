@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OficinaMecanica.Api.Application.DTOs;
+using OficinaMecanica.Api.Application.Exceptions;
+using OficinaMecanica.Api.Controllers.Mappers;
 using OficinaMecanica.Api.InterfaceAdapters.Controllers;
+using OficinaMecanica.Api.InterfaceAdapters.DTOs;
+using HttpDtos = OficinaMecanica.Api.Controllers.DTOs;
 
 namespace OficinaMecanica.Api.Controllers;
 
@@ -36,7 +39,14 @@ public class OrdensServicoController : ControllerBase
     [AllowAnonymous]
     public IActionResult GetByCpfCnpjCliente(string cpfCnpj)
     {
-        return Ok(_ordensServicoCleanController.ObterPorCpfCnpjCliente(cpfCnpj));
+        try
+        {
+            return Ok(_ordensServicoCleanController.ObterPorCpfCnpjCliente(cpfCnpj));
+        }
+        catch (ValidacaoException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet("{id:guid}")]
@@ -53,12 +63,16 @@ public class OrdensServicoController : ControllerBase
     [ProducesResponseType(typeof(OrdemServicoResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public IActionResult Post([FromBody] OrdemServicoRequestDto ordemServicoRequestDto)
+    public IActionResult Post([FromBody] HttpDtos.OrdemServicoRequestDto ordemServicoRequestDto)
     {
         try
         {
-            var ordemServico = _ordensServicoCleanController.Criar(ordemServicoRequestDto);
+            var ordemServico = _ordensServicoCleanController.Criar(ordemServicoRequestDto.ParaCleanDto());
             return CreatedAtAction(nameof(GetById), new { id = ordemServico.Id }, ordemServico);
+        }
+        catch (ValidacaoException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
         catch (InvalidOperationException ex)
         {
@@ -87,11 +101,11 @@ public class OrdensServicoController : ControllerBase
     [ProducesResponseType(typeof(OrdemServicoResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public IActionResult EnviarOrcamento(Guid id, [FromBody] OrdemServicoOrcamentoRequestDto requestDto)
+    public IActionResult EnviarOrcamento(Guid id, [FromBody] HttpDtos.OrdemServicoOrcamentoRequestDto requestDto)
     {
         try
         {
-            var ordemServico = _ordensServicoCleanController.EnviarOrcamento(id, requestDto);
+            var ordemServico = _ordensServicoCleanController.EnviarOrcamento(id, requestDto.ParaCleanDto());
             return ordemServico is null ? NotFound() : Ok(ordemServico);
         }
         catch (InvalidOperationException ex)
@@ -121,11 +135,11 @@ public class OrdensServicoController : ControllerBase
     [ProducesResponseType(typeof(OrdemServicoResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public IActionResult RecusarOrcamento(Guid id, [FromBody] OrdemServicoRespostaAprovacaoRequestDto requestDto)
+    public IActionResult RecusarOrcamento(Guid id, [FromBody] HttpDtos.OrdemServicoRespostaAprovacaoRequestDto requestDto)
     {
         try
         {
-            var ordemServico = _ordensServicoCleanController.RecusarOrcamento(id, requestDto);
+            var ordemServico = _ordensServicoCleanController.RecusarOrcamento(id, requestDto.ParaCleanDto());
             return ordemServico is null ? NotFound() : Ok(ordemServico);
         }
         catch (InvalidOperationException ex)

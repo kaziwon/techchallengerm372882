@@ -1,4 +1,4 @@
-using OficinaMecanica.Api.Application.DTOs;
+using OficinaMecanica.Api.InterfaceAdapters.DTOs;
 using OficinaMecanica.Api.Application.UseCases.PecasInsumos;
 
 namespace OficinaMecanica.Api.InterfaceAdapters.Controllers;

@@ -1,3 +1,4 @@
+using OficinaMecanica.Api.Application.Exceptions;
 using OficinaMecanica.Api.Application.Gateways;
 using OficinaMecanica.Api.Domain.Entities;
 
@@ -5,17 +6,22 @@ namespace OficinaMecanica.Api.Application.UseCases.Clientes;
 
 public class CriarClienteUseCase
 {
+    private const string CpfCnpjInvalido = "O CPF/CNPJ informado é inválido.";
     private const string CpfCnpjJaCadastrado = "Ja existe um cliente cadastrado com este CPF/CNPJ.";
     private readonly IClienteGateway _clienteGateway;
+    private readonly ICpfCnpjValidatorGateway _cpfCnpjValidatorGateway;
 
-    public CriarClienteUseCase(IClienteGateway clienteGateway)
+    public CriarClienteUseCase(IClienteGateway clienteGateway, ICpfCnpjValidatorGateway cpfCnpjValidatorGateway)
     {
         _clienteGateway = clienteGateway;
+        _cpfCnpjValidatorGateway = cpfCnpjValidatorGateway;
     }
 
     public ClienteOutput Executar(CriarClienteInput input)
     {
-        if (_clienteGateway.ExistePorCpfCnpj(input.CpfCnpj))
+        var cpfCnpj = ValidarCpfCnpj(input.CpfCnpj);
+
+        if (_clienteGateway.ExistePorCpfCnpj(cpfCnpj))
         {
             throw new InvalidOperationException(CpfCnpjJaCadastrado);
         }
@@ -24,7 +30,7 @@ public class CriarClienteUseCase
         {
             Id = Guid.NewGuid(),
             Nome = input.Nome,
-            CpfCnpj = input.CpfCnpj,
+            CpfCnpj = cpfCnpj,
             Email = input.Email,
             Telefone = input.Telefone
         };
@@ -32,5 +38,15 @@ public class CriarClienteUseCase
         var clienteAdicionado = _clienteGateway.Adicionar(cliente);
 
         return ClienteOutputMapper.Mapear(clienteAdicionado);
+    }
+
+    private string ValidarCpfCnpj(string cpfCnpj)
+    {
+        if (!_cpfCnpjValidatorGateway.EhValido(cpfCnpj))
+        {
+            throw new ValidacaoException(CpfCnpjInvalido);
+        }
+
+        return _cpfCnpjValidatorGateway.Normalizar(cpfCnpj);
     }
 }

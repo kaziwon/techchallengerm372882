@@ -1,4 +1,5 @@
 using OficinaMecanica.Api.Application.Gateways;
+using OficinaMecanica.Api.Application.Exceptions;
 using OficinaMecanica.Api.Application.UseCases.Clientes;
 using OficinaMecanica.Api.Domain.Entities;
 
@@ -13,7 +14,7 @@ public class ClienteUseCasesTests
         {
             ExistePorCpfCnpjResult = true
         };
-        var useCase = new CriarClienteUseCase(gateway);
+        var useCase = new CriarClienteUseCase(gateway, new FakeCpfCnpjValidatorGateway());
         var input = CriarInput();
 
         Assert.Throws<InvalidOperationException>(() => useCase.Executar(input));
@@ -23,7 +24,7 @@ public class ClienteUseCasesTests
     public void Criar_DeveRetornarClienteOutput_QuandoDadosForemValidos()
     {
         var gateway = new FakeClienteGateway();
-        var useCase = new CriarClienteUseCase(gateway);
+        var useCase = new CriarClienteUseCase(gateway, new FakeCpfCnpjValidatorGateway());
         var input = CriarInput();
 
         var output = useCase.Executar(input);
@@ -43,7 +44,7 @@ public class ClienteUseCasesTests
         {
             ExistePorCpfCnpjExcetoIdResult = true
         };
-        var useCase = new AtualizarClienteUseCase(gateway);
+        var useCase = new AtualizarClienteUseCase(gateway, new FakeCpfCnpjValidatorGateway());
 
         Assert.Throws<InvalidOperationException>(() => useCase.Executar(CriarAtualizarInput(Guid.NewGuid())));
     }
@@ -52,7 +53,7 @@ public class ClienteUseCasesTests
     public void Atualizar_DeveRetornarNull_QuandoClienteNaoExistir()
     {
         var gateway = new FakeClienteGateway();
-        var useCase = new AtualizarClienteUseCase(gateway);
+        var useCase = new AtualizarClienteUseCase(gateway, new FakeCpfCnpjValidatorGateway());
 
         var output = useCase.Executar(CriarAtualizarInput(Guid.NewGuid()));
 
@@ -77,6 +78,19 @@ public class ClienteUseCasesTests
 
         Assert.Single(output);
         Assert.Equal("Maria Oliveira", output[0].Nome);
+    }
+
+    [Fact]
+    public void Criar_DeveLancarValidacaoException_QuandoCpfCnpjForInvalido()
+    {
+        var gateway = new FakeClienteGateway();
+        var cpfCnpjValidator = new FakeCpfCnpjValidatorGateway
+        {
+            EhValidoResult = false
+        };
+        var useCase = new CriarClienteUseCase(gateway, cpfCnpjValidator);
+
+        Assert.Throws<ValidacaoException>(() => useCase.Executar(CriarInput()));
     }
 
     [Fact]

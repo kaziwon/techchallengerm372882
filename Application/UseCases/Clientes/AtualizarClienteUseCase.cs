@@ -1,3 +1,4 @@
+using OficinaMecanica.Api.Application.Exceptions;
 using OficinaMecanica.Api.Application.Gateways;
 using OficinaMecanica.Api.Domain.Entities;
 
@@ -5,17 +6,22 @@ namespace OficinaMecanica.Api.Application.UseCases.Clientes;
 
 public class AtualizarClienteUseCase
 {
+    private const string CpfCnpjInvalido = "O CPF/CNPJ informado é inválido.";
     private const string CpfCnpjJaCadastrado = "Ja existe um cliente cadastrado com este CPF/CNPJ.";
     private readonly IClienteGateway _clienteGateway;
+    private readonly ICpfCnpjValidatorGateway _cpfCnpjValidatorGateway;
 
-    public AtualizarClienteUseCase(IClienteGateway clienteGateway)
+    public AtualizarClienteUseCase(IClienteGateway clienteGateway, ICpfCnpjValidatorGateway cpfCnpjValidatorGateway)
     {
         _clienteGateway = clienteGateway;
+        _cpfCnpjValidatorGateway = cpfCnpjValidatorGateway;
     }
 
     public ClienteOutput? Executar(AtualizarClienteInput input)
     {
-        if (_clienteGateway.ExistePorCpfCnpjExcetoId(input.CpfCnpj, input.Id))
+        var cpfCnpj = ValidarCpfCnpj(input.CpfCnpj);
+
+        if (_clienteGateway.ExistePorCpfCnpjExcetoId(cpfCnpj, input.Id))
         {
             throw new InvalidOperationException(CpfCnpjJaCadastrado);
         }
@@ -24,7 +30,7 @@ public class AtualizarClienteUseCase
         {
             Id = input.Id,
             Nome = input.Nome,
-            CpfCnpj = input.CpfCnpj,
+            CpfCnpj = cpfCnpj,
             Email = input.Email,
             Telefone = input.Telefone
         };
@@ -32,5 +38,15 @@ public class AtualizarClienteUseCase
         var clienteAtualizado = _clienteGateway.Atualizar(cliente);
 
         return clienteAtualizado is null ? null : ClienteOutputMapper.Mapear(clienteAtualizado);
+    }
+
+    private string ValidarCpfCnpj(string cpfCnpj)
+    {
+        if (!_cpfCnpjValidatorGateway.EhValido(cpfCnpj))
+        {
+            throw new ValidacaoException(CpfCnpjInvalido);
+        }
+
+        return _cpfCnpjValidatorGateway.Normalizar(cpfCnpj);
     }
 }

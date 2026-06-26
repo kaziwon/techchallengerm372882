@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace OficinaMecanica.Api.Domain.Entities;
 
 public class OrdemServico
@@ -12,7 +10,6 @@ public class OrdemServico
     public decimal ValorTotalServicos { get; set; }
     public decimal ValorTotalPecasInsumos { get; set; }
     public decimal ValorTotalOrcamento { get; set; }
-    [Column("MockEnvioOrcamento")]
     public string EnvioOrcamento { get; set; } = string.Empty;
     public string MotivoRecusaOrcamento { get; set; } = string.Empty;
     public DateTime CriadaEm { get; set; }
