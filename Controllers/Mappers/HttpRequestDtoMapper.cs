@@ -89,6 +89,16 @@ public static class HttpRequestDtoMapper
         };
     }
 
+    public static CleanDtos.OrdemServicoNotificacaoOrcamentoRequestDto ParaCleanDto(
+        this HttpDtos.OrdemServicoNotificacaoOrcamentoRequestDto dto)
+    {
+        return new CleanDtos.OrdemServicoNotificacaoOrcamentoRequestDto
+        {
+            Aprovado = dto.Aprovado!.Value,
+            MotivoRecusa = dto.MotivoRecusa
+        };
+    }
+
     private static CleanDtos.OrdemServicoItemPecaInsumoRequestDto ParaCleanDto(
         this HttpDtos.OrdemServicoItemPecaInsumoRequestDto dto)
     {

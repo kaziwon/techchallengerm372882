@@ -148,6 +148,31 @@ public class OrdensServicoController : ControllerBase
         }
     }
 
+    [HttpPost("{id:guid}/notificacao-orcamento")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(OrdemServicoResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public IActionResult NotificarAprovacaoOrcamento(
+        Guid id,
+        [FromBody] HttpDtos.OrdemServicoNotificacaoOrcamentoRequestDto requestDto)
+    {
+        try
+        {
+            var ordemServico = _ordensServicoCleanController.NotificarAprovacaoOrcamento(id, requestDto.ParaCleanDto());
+            return ordemServico is null ? NotFound() : Ok(ordemServico);
+        }
+        catch (ValidacaoException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("{id:guid}/cancelar")]
     [ProducesResponseType(typeof(OrdemServicoResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

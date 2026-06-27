@@ -123,6 +123,21 @@ public class OrdensServicoCleanController
         return ordemServico is null ? null : MapearResponse(ordemServico);
     }
 
+    public OrdemServicoResponseDto? NotificarAprovacaoOrcamento(
+        Guid id,
+        OrdemServicoNotificacaoOrcamentoRequestDto requestDto)
+    {
+        if (requestDto.Aprovado)
+        {
+            return AprovarOrcamento(id);
+        }
+
+        return RecusarOrcamento(id, new OrdemServicoRespostaAprovacaoRequestDto
+        {
+            MotivoRecusa = requestDto.MotivoRecusa
+        });
+    }
+
     public OrdemServicoResponseDto? Cancelar(Guid id)
     {
         var ordemServico = _cancelarOrdemServicoUseCase.Executar(id);

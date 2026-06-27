@@ -250,6 +250,70 @@ public class OrdemServicoEndpointsTests
     }
 
     [Fact]
+    public async Task NotificacaoOrcamento_DeveAprovarSemAutenticacao()
+    {
+        await using var factory = new CustomWebApplicationFactory();
+        using var adminClient = factory.CreateClient();
+        using var externalClient = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(adminClient);
+
+        var cliente = await CriarCliente(adminClient);
+        var servico = await CriarServico(adminClient);
+        var peca = await CriarPeca(adminClient);
+        var veiculo = await CriarVeiculo(adminClient, cliente.Id);
+        var ordem = await CriarOrdemServico(adminClient, cliente, veiculo);
+
+        await adminClient.PostAsync($"/api/ordensservico/{ordem.Id}/iniciar-diagnostico", null);
+        await EnviarOrcamento(adminClient, ordem.Id, servico.Id, peca.Id);
+
+        var response = await externalClient.PostAsJsonAsync(
+            $"/api/ordensservico/{ordem.Id}/notificacao-orcamento",
+            new OrdemServicoNotificacaoOrcamentoRequestDto
+            {
+                Aprovado = true
+            });
+        var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>(JsonTestOptions.Value);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(ordemAtualizada);
+        Assert.Equal(StatusOrdemServico.EmExecucao, ordemAtualizada.Status);
+        Assert.Equal(StatusAprovacaoOrcamento.Aprovado, ordemAtualizada.StatusAprovacaoOrcamento);
+    }
+
+    [Fact]
+    public async Task NotificacaoOrcamento_DeveRecusarSemAutenticacao()
+    {
+        await using var factory = new CustomWebApplicationFactory();
+        using var adminClient = factory.CreateClient();
+        using var externalClient = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(adminClient);
+
+        var cliente = await CriarCliente(adminClient);
+        var servico = await CriarServico(adminClient);
+        var peca = await CriarPeca(adminClient);
+        var veiculo = await CriarVeiculo(adminClient, cliente.Id);
+        var ordem = await CriarOrdemServico(adminClient, cliente, veiculo);
+
+        await adminClient.PostAsync($"/api/ordensservico/{ordem.Id}/iniciar-diagnostico", null);
+        await EnviarOrcamento(adminClient, ordem.Id, servico.Id, peca.Id);
+
+        var response = await externalClient.PostAsJsonAsync(
+            $"/api/ordensservico/{ordem.Id}/notificacao-orcamento",
+            new OrdemServicoNotificacaoOrcamentoRequestDto
+            {
+                Aprovado = false,
+                MotivoRecusa = "Cliente solicitou revisao do valor"
+            });
+        var ordemAtualizada = await response.Content.ReadFromJsonAsync<OrdemServicoResponseDto>(JsonTestOptions.Value);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(ordemAtualizada);
+        Assert.Equal(StatusOrdemServico.EmDiagnostico, ordemAtualizada.Status);
+        Assert.Equal(StatusAprovacaoOrcamento.Recusado, ordemAtualizada.StatusAprovacaoOrcamento);
+        Assert.Equal("Cliente solicitou revisao do valor", ordemAtualizada.MotivoRecusaOrcamento);
+    }
+
+    [Fact]
     public async Task Cancelar_DeveAlterarStatusParaCancelada()
     {
         await using var factory = new CustomWebApplicationFactory();
