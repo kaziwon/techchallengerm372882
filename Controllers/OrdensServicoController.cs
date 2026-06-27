@@ -1,7 +1,11 @@
+using System.Globalization;
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Api.Application.Exceptions;
+using OficinaMecanica.Api.Application.UseCases.OrdensServico;
 using OficinaMecanica.Api.Controllers.Mappers;
+using OficinaMecanica.Api.Domain.Entities;
 using OficinaMecanica.Api.InterfaceAdapters.Controllers;
 using OficinaMecanica.Api.InterfaceAdapters.DTOs;
 using HttpDtos = OficinaMecanica.Api.Controllers.DTOs;
@@ -22,9 +26,19 @@ public class OrdensServicoController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(List<OrdemServicoResponseDto>), StatusCodes.Status200OK)]
-    public IActionResult Get()
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public IActionResult Get([FromQuery] string? status, [FromQuery] string? ordenacao)
     {
-        return Ok(_ordensServicoCleanController.ObterTodas());
+        try
+        {
+            return Ok(_ordensServicoCleanController.ObterTodas(
+                MapearStatus(status),
+                MapearOrdenacao(ordenacao)));
+        }
+        catch (ValidacaoException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet("tempo-medio-execucao")]
@@ -224,4 +238,51 @@ public class OrdensServicoController : ControllerBase
         }
     }
 
+    private static StatusOrdemServico? MapearStatus(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            return null;
+        }
+
+        return NormalizarTexto(status) switch
+        {
+            "recebida" => StatusOrdemServico.Recebida,
+            "diagnostico" or "emdiagnostico" => StatusOrdemServico.EmDiagnostico,
+            "aguardandoaprovacao" => StatusOrdemServico.AguardandoAprovacao,
+            "execucao" or "emexecucao" => StatusOrdemServico.EmExecucao,
+            "finalizada" => StatusOrdemServico.Finalizada,
+            "entregue" => StatusOrdemServico.Entregue,
+            "cancelada" or "cancelado" => StatusOrdemServico.Cancelada,
+            _ => throw new ValidacaoException("Status invalido para listagem de ordens de servico.")
+        };
+    }
+
+    private static OrdemServicoOrdenacaoData MapearOrdenacao(string? ordenacao)
+    {
+        if (string.IsNullOrWhiteSpace(ordenacao))
+        {
+            return OrdemServicoOrdenacaoData.MaisAntigasPrimeiro;
+        }
+
+        return NormalizarTexto(ordenacao) switch
+        {
+            "maisantigo" or "maisantigos" or "antigo" or "antigos" or "asc" or "ascendente" =>
+                OrdemServicoOrdenacaoData.MaisAntigasPrimeiro,
+            "maisnovo" or "maisnovos" or "novo" or "novos" or "desc" or "descendente" =>
+                OrdemServicoOrdenacaoData.MaisNovasPrimeiro,
+            _ => throw new ValidacaoException("Ordenacao invalida. Use maisAntigo ou maisNovo.")
+        };
+    }
+
+    private static string NormalizarTexto(string texto)
+    {
+        var textoSemAcentos = texto.Trim().Normalize(NormalizationForm.FormD);
+        var caracteres = textoSemAcentos
+            .Where(caractere => CharUnicodeInfo.GetUnicodeCategory(caractere) != UnicodeCategory.NonSpacingMark)
+            .Where(char.IsLetterOrDigit)
+            .Select(char.ToLowerInvariant);
+
+        return new string(caracteres.ToArray());
+    }
 }

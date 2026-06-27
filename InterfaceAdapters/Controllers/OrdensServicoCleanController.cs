@@ -1,5 +1,6 @@
 using OficinaMecanica.Api.InterfaceAdapters.DTOs;
 using OficinaMecanica.Api.Application.UseCases.OrdensServico;
+using OficinaMecanica.Api.Domain.Entities;
 
 namespace OficinaMecanica.Api.InterfaceAdapters.Controllers;
 
@@ -46,9 +47,14 @@ public class OrdensServicoCleanController
         _entregarOrdemServicoUseCase = entregarOrdemServicoUseCase;
     }
 
-    public List<OrdemServicoResponseDto> ObterTodas()
+    public List<OrdemServicoResponseDto> ObterTodas(
+        StatusOrdemServico? status = null,
+        OrdemServicoOrdenacaoData ordenacaoData = OrdemServicoOrdenacaoData.MaisAntigasPrimeiro)
     {
-        return _obterTodasOrdensServicoUseCase.Executar().Select(MapearResponse).ToList();
+        return _obterTodasOrdensServicoUseCase
+            .Executar(new ObterOrdensServicoInput(status, ordenacaoData))
+            .Select(MapearResponse)
+            .ToList();
     }
 
     public TempoMedioExecucaoResponseDto ObterTempoMedioExecucao()

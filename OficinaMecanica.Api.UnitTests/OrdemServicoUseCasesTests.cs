@@ -384,6 +384,77 @@ public class OrdemServicoUseCasesTests
     }
 
     [Fact]
+    public void ObterTodas_DeveOrdenarPorPrioridadeStatusEMaisAntigasPrimeiro()
+    {
+        var contexto = new FakeContextoOrdemServico();
+        var agora = DateTime.UtcNow;
+        var execucaoAntiga = CriarOrdemListagem(StatusOrdemServico.EmExecucao, agora.AddMinutes(2));
+        var execucaoNova = CriarOrdemListagem(StatusOrdemServico.EmExecucao, agora.AddMinutes(4));
+        var aguardandoAprovacao = CriarOrdemListagem(StatusOrdemServico.AguardandoAprovacao, agora.AddMinutes(1));
+        var emDiagnostico = CriarOrdemListagem(StatusOrdemServico.EmDiagnostico, agora.AddMinutes(1));
+        var recebida = CriarOrdemListagem(StatusOrdemServico.Recebida, agora.AddMinutes(1));
+        var finalizada = CriarOrdemListagem(StatusOrdemServico.Finalizada, agora.AddMinutes(1));
+        var entregue = CriarOrdemListagem(StatusOrdemServico.Entregue, agora.AddMinutes(1));
+        var cancelada = CriarOrdemListagem(StatusOrdemServico.Cancelada, agora.AddMinutes(1));
+        contexto.OrdemServicoGateway.OrdensServico.AddRange(
+        [
+            recebida,
+            entregue,
+            emDiagnostico,
+            execucaoNova,
+            cancelada,
+            aguardandoAprovacao,
+            finalizada,
+            execucaoAntiga
+        ]);
+        var useCase = contexto.ObterTodasOrdensServicoUseCase();
+
+        var response = useCase.Executar();
+
+        Assert.Equal(
+        [
+            execucaoAntiga.Id,
+            execucaoNova.Id,
+            aguardandoAprovacao.Id,
+            emDiagnostico.Id,
+            recebida.Id
+        ], response.Select(ordem => ordem.Id));
+    }
+
+    [Fact]
+    public void ObterTodas_DeveOrdenarMesmaPrioridadePorMaisNovasPrimeiro()
+    {
+        var contexto = new FakeContextoOrdemServico();
+        var agora = DateTime.UtcNow;
+        var antiga = CriarOrdemListagem(StatusOrdemServico.Recebida, agora.AddMinutes(1));
+        var nova = CriarOrdemListagem(StatusOrdemServico.Recebida, agora.AddMinutes(2));
+        contexto.OrdemServicoGateway.OrdensServico.AddRange([antiga, nova]);
+        var useCase = contexto.ObterTodasOrdensServicoUseCase();
+
+        var response = useCase.Executar(new ObterOrdensServicoInput(
+            ordenacaoData: OrdemServicoOrdenacaoData.MaisNovasPrimeiro));
+
+        Assert.Equal([nova.Id, antiga.Id], response.Select(ordem => ordem.Id));
+    }
+
+    [Fact]
+    public void ObterTodas_DeveFiltrarPorStatus()
+    {
+        var contexto = new FakeContextoOrdemServico();
+        contexto.OrdemServicoGateway.OrdensServico.AddRange(
+        [
+            CriarOrdemListagem(StatusOrdemServico.Recebida, DateTime.UtcNow),
+            CriarOrdemListagem(StatusOrdemServico.EmDiagnostico, DateTime.UtcNow)
+        ]);
+        var useCase = contexto.ObterTodasOrdensServicoUseCase();
+
+        var response = useCase.Executar(new ObterOrdensServicoInput(StatusOrdemServico.EmDiagnostico));
+
+        Assert.Single(response);
+        Assert.Equal(StatusOrdemServico.EmDiagnostico, response[0].Status);
+    }
+
+    [Fact]
     public void ObterTempoMedioExecucao_DeveCalcularMediaDasOrdensFinalizadas()
     {
         var contexto = new FakeContextoOrdemServico();
@@ -498,6 +569,17 @@ public class OrdemServicoUseCasesTests
         };
     }
 
+    private static OrdemServico CriarOrdemListagem(StatusOrdemServico status, DateTime criadaEm)
+    {
+        return new OrdemServico
+        {
+            Id = Guid.NewGuid(),
+            Status = status,
+            StatusAprovacaoOrcamento = StatusAprovacaoOrcamento.Pendente,
+            CriadaEm = criadaEm
+        };
+    }
+
     private static OrdemServico CriarOrdemComPeca(Cliente cliente, Veiculo veiculo, PecaInsumo peca, StatusOrdemServico status)
     {
         return new OrdemServico
@@ -595,6 +677,11 @@ public class OrdemServicoUseCasesTests
         public ObterTempoMedioExecucaoUseCase ObterTempoMedioExecucaoUseCase()
         {
             return new ObterTempoMedioExecucaoUseCase(OrdemServicoGateway);
+        }
+
+        public ObterTodasOrdensServicoUseCase ObterTodasOrdensServicoUseCase()
+        {
+            return new ObterTodasOrdensServicoUseCase(OrdemServicoGateway);
         }
     }
 

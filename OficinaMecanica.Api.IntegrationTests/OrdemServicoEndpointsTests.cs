@@ -411,6 +411,29 @@ public class OrdemServicoEndpointsTests
     }
 
     [Fact]
+    public async Task Get_DeveFiltrarPorStatusDaQueryString()
+    {
+        await using var factory = new CustomWebApplicationFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.AuthenticateAsync(client);
+
+        var cliente = await CriarCliente(client);
+        var veiculo = await CriarVeiculo(client, cliente.Id);
+        var ordemRecebida = await CriarOrdemServico(client, cliente, veiculo);
+        var ordemDiagnostico = await CriarOrdemServico(client, cliente, veiculo);
+        await client.PostAsync($"/api/ordensservico/{ordemDiagnostico.Id}/iniciar-diagnostico", null);
+
+        var response = await client.GetAsync("/api/ordensservico?status=Recebida&ordenacao=maisNovo");
+        var ordens = await response.Content.ReadFromJsonAsync<List<OrdemServicoResponseDto>>(JsonTestOptions.Value);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(ordens);
+        Assert.Contains(ordens, ordem => ordem.Id == ordemRecebida.Id);
+        Assert.DoesNotContain(ordens, ordem => ordem.Id == ordemDiagnostico.Id);
+        Assert.All(ordens, ordem => Assert.Equal(StatusOrdemServico.Recebida, ordem.Status));
+    }
+
+    [Fact]
     public async Task GetTempoMedioExecucao_DeveRetornarMetricaDasOrdensFinalizadas()
     {
         await using var factory = new CustomWebApplicationFactory();
