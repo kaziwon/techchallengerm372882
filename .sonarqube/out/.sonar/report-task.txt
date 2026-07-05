@@ -1,6 +1,0 @@
-projectKey=oficina-mecanica-api
-serverUrl=http://localhost:9000
-serverVersion=26.4.0.121862
-dashboardUrl=http://localhost:9000/dashboard?id=oficina-mecanica-api
-ceTaskId=aaa93fb3-b4ae-4529-9c6a-77aa0da3be45
-ceTaskUrl=http://localhost:9000/api/ce/task?id=aaa93fb3-b4ae-4529-9c6a-77aa0da3be45
