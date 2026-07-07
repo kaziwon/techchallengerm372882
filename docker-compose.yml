@@ -1,5 +1,8 @@
+name: oficina-mecanica
+
 services:
   api:
+    image: oficina-mecanica-api:local
     build:
       context: .
       dockerfile: Dockerfile
@@ -11,8 +14,15 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: server=mysql;port=3306;database=oficina_mecanica;user=oficina_user;password=oficina_pass
+      JwtSettings__Issuer: OficinaMecanica.Api
+      JwtSettings__Audience: OficinaMecanica.Api
+      JwtSettings__SecretKey: oficina-mecanica-tech-challenge-secret-key-2026
+      AdminUserSettings__Username: admin
+      AdminUserSettings__Password: Admin@123
     ports:
       - "8080:8080"
+    networks:
+      - oficina_mecanica_network
     restart: unless-stopped
 
   mysql:
@@ -27,6 +37,8 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - oficina_mecanica_network
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -uoficina_user -poficina_pass --silent"]
       interval: 10s
@@ -37,3 +49,6 @@ services:
 
 volumes:
   mysql_data:
+
+networks:
+  oficina_mecanica_network:

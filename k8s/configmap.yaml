@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oficina-mecanica-config
+  namespace: oficina-mecanica
+data:
+  ASPNETCORE_ENVIRONMENT: Development
+  ASPNETCORE_URLS: http://+:8080
+  MYSQL_DATABASE: oficina_mecanica
+  MYSQL_USER: oficina_user
+  ConnectionStrings__DefaultConnection: server=mysql;port=3306;database=oficina_mecanica;user=oficina_user;password=oficina_pass
+  JwtSettings__Issuer: OficinaMecanica.Api
+  JwtSettings__Audience: OficinaMecanica.Api

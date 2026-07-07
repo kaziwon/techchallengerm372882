@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oficina-mecanica-api
+  namespace: oficina-mecanica
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oficina-mecanica-api
+  template:
+    metadata:
+      labels:
+        app: oficina-mecanica-api
+    spec:
+      initContainers:
+        - name: wait-for-mysql
+          image: mysql:8.4
+          command:
+            - sh
+            - -c
+            - until mysqladmin ping -h mysql -uoficina_user -poficina_pass --silent; do echo "waiting for mysql"; sleep 5; done
+      containers:
+        - name: api
+          image: oficina-mecanica-api:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: oficina-mecanica-config
+            - secretRef:
+                name: oficina-mecanica-secret
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

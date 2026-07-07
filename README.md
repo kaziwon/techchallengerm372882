@@ -1,4 +1,305 @@
-# Tech Challenge - Fase 1
+# Tech Challenge - Oficina Mecânica
+
+Sistema integrado para gestão de oficina mecânica, desenvolvido como MVP de back-end para o Tech Challenge da pós-graduação.
+
+# ---- Fase 2 ----
+
+A Fase 2 adiciona a execução local com Kubernetes. A aplicação continua sendo a mesma API da oficina, mas agora ela pode ser executada em um cluster local com API, MySQL, ConfigMap, Secret, volume persistente, Service, HPA e Metrics Server.
+
+## Decisão de infraestrutura
+
+Para a Fase 2, foi escolhida uma execução local em vez de publicar a aplicação em uma cloud pública, como AWS.
+
+Nesse modelo, o Docker Desktop fornece a engine Docker da máquina, e o Terraform provisiona um cluster Kubernetes local usando kind. 
+
+Para a parte de CI/CD, a estratégia foi utilizar um self-hosted runner do GitHub Actions instalado na máquina local. Esse runner funciona como o servidor responsável por executar os passos da pipeline, como rodar testes, gerar a imagem Docker, criar ou atualizar o cluster local com Terraform e aplicar os manifests no Kubernetes.
+
+Com isso, o fluxo da entrega fica assim:
+
+```text
+push na branch main
+  -> GitHub Actions aciona a pipeline
+  -> self-hosted runner local executa os comandos
+  -> testes são executados
+  -> imagem Docker da API é gerada
+  -> Terraform provisiona o cluster Kubernetes local com kind
+  -> Terraform aplica os manifests Kubernetes
+  -> aplicação fica disponível em http://localhost:18080
+```
+
+## O que existe na Fase 2
+
+- `Dockerfile`: gera a imagem da API.
+- `docker-compose.yml`: mantém o jeito antigo de subir a aplicação com Docker Compose.
+- `infra/`: scripts Terraform para provisionar o cluster local e os recursos Kubernetes.
+- `infra/manifests/`: manifests aplicados pelo Terraform como resources `kubectl_manifest`.
+- `k8s/`: guarda os manifests Kubernetes usados como referência e execução manual.
+- `k8s/kustomization.yaml`: lista todos os arquivos Kubernetes que devem ser aplicados juntos.
+- `k8s/api-deployment.yaml`: define como o pod da API deve rodar.
+- `k8s/api-service.yaml`: expõe a API para acesso local em `http://localhost:18080`.
+- `k8s/mysql-deployment.yaml`: define como o pod do MySQL deve rodar.
+- `k8s/mysql-service.yaml`: cria o endereço interno do MySQL dentro do cluster.
+- `k8s/mysql-pvc.yaml`: cria o volume persistente usado pelo MySQL.
+- `k8s/configmap.yaml`: guarda configurações não sensíveis da aplicação.
+- `k8s/secret.yaml`: guarda valores sensíveis, como senha do banco e chave JWT.
+- `k8s/api-hpa.yaml`: configura o autoscaling da API.
+- `k8s/metrics-server.yaml`: instala o Metrics Server para o HPA conseguir ler CPU e memória.
+
+## Pré-requisitos
+
+Antes de rodar pela Fase 2, é necessário ter:
+
+- Docker Desktop instalado.
+- Docker Desktop rodando.
+- Terraform instalado.
+- `kubectl` disponível no terminal.
+- `.NET SDK` instalado apenas se quiser rodar os testes localmente fora do Docker.
+
+Para o fluxo com Terraform e kind, não é necessário habilitar o Kubernetes do Docker Desktop. O Terraform cria o cluster local usando containers Docker.
+
+## Como rodar com Terraform
+
+Execute os comandos abaixo na raiz do projeto.
+
+### Comandos do zero
+
+```bash
+docker build -t oficina-mecanica-api:local .
+cd infra
+terraform init
+terraform apply
+```
+
+Depois abra:
+
+```text
+http://localhost:18080/swagger/index.html
+```
+
+O comando abaixo e opcional para a aplicacao funcionar, mas necessario se voce quiser consultar o cluster com `kubectl` no terminal:
+
+```bash
+export KUBECONFIG="$(pwd)/.terraform/oficina-mecanica-kubeconfig"
+```
+
+### 1. Gerar a imagem Docker da API
+
+```bash
+docker build -t oficina-mecanica-api:local .
+```
+
+Esse comando lê o `Dockerfile`, compila a aplicação e cria uma imagem local chamada `oficina-mecanica-api:local`.
+
+Essa imagem é a que o Kubernetes vai usar para criar o pod da API.
+
+### 2. Entrar na pasta de infraestrutura
+
+```bash
+cd infra
+```
+
+Essa pasta contém os arquivos Terraform responsáveis pela infraestrutura local.
+
+### 3. Inicializar o Terraform
+
+```bash
+terraform init
+```
+
+Esse comando baixa os providers usados pelo projeto:
+
+- `tehcyx/kind`, para criar o cluster Kubernetes local;
+- `gavinbunney/kubectl`, para aplicar manifests YAML como resources do Terraform.
+
+### 4. Ver o plano de execução
+
+```bash
+terraform plan
+```
+
+Esse comando mostra o que o Terraform pretende criar antes de aplicar qualquer mudança.
+
+### 5. Aplicar a infraestrutura
+
+```bash
+terraform apply
+```
+
+Esse comando cria o cluster Kubernetes local com kind, carrega a imagem da API dentro do cluster e aplica os manifests Kubernetes.
+
+Na prática, ele cria ou atualiza:
+
+- cluster Kubernetes local
+- namespace da aplicação
+- configurações
+- secrets
+- MySQL
+- volume do MySQL
+- API
+- services
+- HPA
+- Metrics Server
+
+### 6. Configurar o kubectl para o cluster criado
+
+```bash
+export KUBECONFIG="$(pwd)/.terraform/oficina-mecanica-kubeconfig"
+```
+
+Esse comando faz o `kubectl` apontar para o cluster local criado pelo Terraform. Ele nao e necessario para a API funcionar; serve apenas para comandos de consulta e administracao, como `kubectl get pods`, `kubectl logs` e `kubectl exec`.
+
+### 7. Verificar os recursos
+
+```bash
+kubectl get nodes
+kubectl get pods -n oficina-mecanica
+kubectl get service -n oficina-mecanica
+kubectl get hpa -n oficina-mecanica
+```
+
+Esses comandos mostram o node do cluster, os pods da aplicação, os services e o autoscaling.
+
+O MySQL usa `ClusterIP`, porque só precisa ser acessado de dentro do cluster pela API.
+
+A API usa `NodePort` dentro do cluster kind. O cluster kind faz o mapeamento:
+
+```text
+localhost:18080 -> NodePort 30080 -> API:8080
+```
+
+### 8. Acessar a API
+
+Depois que os pods estiverem `Running`, acesse:
+
+```text
+http://localhost:18080/swagger/index.html
+```
+
+Esse endereço abre o Swagger da API rodando no Kubernetes local.
+
+## Como rodar depois de alterar código
+
+Quando alterar código C#, gere uma nova imagem:
+
+```bash
+docker build -t oficina-mecanica-api:local .
+```
+
+Depois entre em `infra/` e recarregue a imagem no cluster:
+
+```bash
+cd infra
+terraform apply -replace=terraform_data.load_api_image
+```
+
+O `docker build` cria a imagem nova. O `terraform apply -replace=terraform_data.load_api_image` força o Terraform a carregar novamente essa imagem dentro do cluster kind.
+
+Depois reinicie o deployment da API:
+
+```bash
+export KUBECONFIG="$(pwd)/.terraform/oficina-mecanica-kubeconfig"
+kubectl rollout restart deployment/oficina-mecanica-api -n oficina-mecanica
+```
+
+Para acompanhar a recriação do pod:
+
+```bash
+kubectl rollout status deployment/oficina-mecanica-api -n oficina-mecanica
+```
+
+## Como ver logs
+
+Para ver logs da API:
+
+```bash
+kubectl logs deployment/oficina-mecanica-api -n oficina-mecanica
+```
+
+Para ver logs do MySQL:
+
+```bash
+kubectl logs deployment/mysql -n oficina-mecanica
+```
+
+## Como acessar o banco no Kubernetes
+
+O MySQL não fica exposto diretamente para fora do cluster. Para acessar o banco, entre no pod pelo `kubectl exec`:
+
+```bash
+kubectl exec -it deployment/mysql -n oficina-mecanica -- mysql -uoficina_user -poficina_pass oficina_mecanica
+```
+
+Dentro do MySQL, para listar as tabelas:
+
+```sql
+SHOW TABLES;
+```
+
+Para sair:
+
+```sql
+exit;
+```
+
+## Como verificar o HPA
+
+O HPA é o recurso que escala a API automaticamente quando CPU ou memória passam do limite configurado.
+
+Para verificar:
+
+```bash
+kubectl get hpa -n oficina-mecanica
+```
+
+Para ver o consumo atual dos pods:
+
+```bash
+kubectl top pods -n oficina-mecanica
+```
+
+Para ver o consumo do node:
+
+```bash
+kubectl top nodes
+```
+
+O comando `kubectl top` depende do Metrics Server. No fluxo Terraform, ele fica em `infra/manifests/`.
+
+## Como remover o ambiente Kubernetes
+
+Para remover os recursos criados pelos manifests:
+
+```bash
+cd infra
+terraform destroy
+```
+
+Atenção: esse comando remove os recursos Kubernetes e o cluster kind criado localmente.
+
+## Resumo do fluxo da Fase 2
+
+```bash
+docker build -t oficina-mecanica-api:local .
+cd infra
+terraform init
+terraform apply
+```
+
+Para inspecionar com `kubectl`:
+
+```bash
+export KUBECONFIG="$(pwd)/.terraform/oficina-mecanica-kubeconfig"
+kubectl get pods -n oficina-mecanica
+kubectl get service -n oficina-mecanica
+```
+
+Depois abra:
+
+```text
+http://localhost:18080/swagger/index.html
+```
+
+# ---- Fase 1 ----
 
 Sistema integrado para gestão de oficina mecânica, desenvolvido como MVP de back-end para o Tech Challenge da pós-graduação.
 
