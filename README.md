@@ -1,7 +1,7 @@
 # Tech Challenge - Oficina Mecânica
 
 Sistema integrado para gestão de oficina mecânica, desenvolvido como MVP de back-end para o Tech Challenge da pós-graduação.
-
+ 
 # ---- Fase 2 ----
 
 A Fase 2 adiciona a execução local com Kubernetes. A aplicação continua sendo a mesma API da oficina, mas agora ela pode ser executada em um cluster local com API, MySQL, ConfigMap, Secret, volume persistente, Service, HPA e Metrics Server.
