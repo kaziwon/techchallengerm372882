@@ -6,6 +6,10 @@ Sistema integrado para gestão de oficina mecânica, desenvolvido como MVP de ba
 
 A Fase 2 adiciona a execução local com Kubernetes. A aplicação continua sendo a mesma API da oficina, mas agora ela pode ser executada em um cluster local com API, MySQL, ConfigMap, Secret, volume persistente, Service, HPA e Metrics Server.
 
+## Link do video com Deploy, CI/CD, consumo das apis e escalabilidade automática
+
+https://youtu.be/B6L1ngVkhgs
+
 ## Decisão de infraestrutura
 
 Para a Fase 2, foi escolhida uma execução local em vez de publicar a aplicação em uma cloud pública, como AWS.
@@ -84,7 +88,7 @@ flowchart TD
     API --> MYSQL
 ```
  
- 
+
 ## Artefatos de API
 
 - Swagger local pelo Kubernetes: `http://localhost:18080/swagger/index.html`
