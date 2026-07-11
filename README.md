@@ -83,7 +83,8 @@ flowchart TD
     API --> SWAGGER["Swagger em localhost:18080"]
     API --> MYSQL
 ```
-
+ 
+ 
 ## Artefatos de API
 
 - Swagger local pelo Kubernetes: `http://localhost:18080/swagger/index.html`
