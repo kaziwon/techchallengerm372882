@@ -207,6 +207,36 @@ Para acompanhar a recriação do pod:
 kubectl rollout status deployment/oficina-mecanica-api -n oficina-mecanica
 ```
 
+## Pipeline CI/CD local
+
+As pipelines ficam separadas em dois workflows:
+
+- `.github/workflows/integracao-continua.yml`: integração contínua;
+- `.github/workflows/entrega-continua.yml`: entrega contínua.
+
+O workflow de integração contínua roda em pull requests para a `main` e em pushes na `main`.
+
+Ele executa:
+
+- build da solução;
+- testes automatizados.
+
+O workflow de entrega contínua roda quando o workflow de integração contínua termina com sucesso na `main`.
+
+Ele executa:
+
+- build da imagem Docker da API;
+- `terraform init`;
+- `terraform validate`;
+- `terraform plan`;
+- `terraform apply`;
+- validação dos recursos Kubernetes;
+- validação do Swagger em `http://localhost:18080/swagger/index.html`.
+
+Como o deploy é local, a pipeline usa `runs-on: self-hosted`. O runner precisa estar instalado na máquina local e a máquina precisa ter Docker Desktop rodando, Terraform e `kubectl` disponíveis.
+
+O checkout das pipelines usa `clean: false` para preservar os arquivos locais ignorados pelo Git, como `.terraform/` e `terraform.tfstate`, que representam o estado da infraestrutura local gerenciada pelo Terraform.
+
 ## Como ver logs
 
 Para ver logs da API:

@@ -1,0 +1,66 @@
+name: Entrega continua
+
+env:
+  API_IMAGE: oficina-mecanica-api:local
+  TF_IN_AUTOMATION: true
+
+on:
+  workflow_run:
+    workflows:
+      - Integracao continua
+    branches:
+      - main
+    types:
+      - completed
+
+jobs:
+  deploy-local:
+    name: Deploy local
+    runs-on: self-hosted
+    if: github.event.workflow_run.conclusion == 'success'
+    concurrency:
+      group: oficina-mecanica-local-deploy
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          clean: false
+
+      - name: Check local tools
+        run: |
+          docker version
+          terraform version
+          kubectl version --client
+
+      - name: Build API Docker image
+        run: docker build -t ${{ env.API_IMAGE }} .
+
+      - name: Terraform init
+        working-directory: infra
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        working-directory: infra
+        run: terraform validate
+
+      - name: Terraform plan
+        working-directory: infra
+        run: terraform plan -input=false
+
+      - name: Terraform apply
+        working-directory: infra
+        run: terraform apply -auto-approve -input=false
+
+      - name: Validate Kubernetes resources
+        run: |
+          export KUBECONFIG="$PWD/infra/.terraform/oficina-mecanica-kubeconfig"
+          kubectl get nodes
+          kubectl get pods -n oficina-mecanica
+          kubectl get service -n oficina-mecanica
+          kubectl get hpa -n oficina-mecanica
+
+      - name: Validate API endpoint
+        run: curl --fail --show-error --location --output /dev/null http://localhost:18080/swagger/index.html
