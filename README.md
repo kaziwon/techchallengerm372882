@@ -27,6 +27,71 @@ push na branch main
   -> aplicação fica disponível em http://localhost:18080
 ```
 
+## Arquitetura proposta
+
+A aplicação foi organizada seguindo Clean Architecture. A regra principal é manter as regras de negócio independentes de frameworks: HTTP, Entity Framework, JWT, validador externo, Docker, Kubernetes e Terraform ficam nas camadas externas.
+
+```mermaid
+flowchart LR
+    subgraph "Frameworks e Drivers"
+        HTTP["ASP.NET Controllers"]
+        DB["MySQL + Entity Framework"]
+        JWT["JWT"]
+        VAL["BrazilianDocuments"]
+    end
+
+    subgraph "Interface Adapters"
+        CLEAN["Clean Controllers"]
+        GATEWAYS["Gateways"]
+        DATASOURCES["DataSources"]
+    end
+
+    subgraph "Application"
+        USECASES["Use Cases"]
+        PORTS["Interfaces de Gateways"]
+    end
+
+    subgraph "Domain"
+        ENTITIES["Entities e Enums"]
+    end
+
+    HTTP --> CLEAN
+    CLEAN --> USECASES
+    USECASES --> PORTS
+    PORTS --> GATEWAYS
+    GATEWAYS --> DATASOURCES
+    DATASOURCES --> DB
+    GATEWAYS --> JWT
+    GATEWAYS --> VAL
+    USECASES --> ENTITIES
+```
+
+## Arquitetura de infraestrutura e deploy
+
+```mermaid
+flowchart TD
+    DEV["Push na main"] --> GHA["GitHub Actions"]
+    GHA --> RUNNER["Self-hosted runner local"]
+    RUNNER --> TESTS["Build e testes"]
+    TESTS --> IMAGE["Build Docker image"]
+    IMAGE --> TF["Terraform"]
+    TF --> KIND["Cluster Kubernetes local com kind"]
+    KIND --> CM["ConfigMap e Secret"]
+    KIND --> MYSQL["MySQL Deployment + PVC + Service"]
+    KIND --> API["API Deployment + Service NodePort"]
+    KIND --> HPA["HPA + Metrics Server"]
+    API --> SWAGGER["Swagger em localhost:18080"]
+    API --> MYSQL
+```
+
+## Artefatos de API
+
+- Swagger local pelo Kubernetes: `http://localhost:18080/swagger/index.html`
+- OpenAPI local pelo Kubernetes: `http://localhost:18080/swagger/v1/swagger.json`
+- Collection Postman versionada: [`docs/postman/oficina-mecanica.postman_collection.json`](docs/postman/oficina-mecanica.postman_collection.json)
+
+Para usar a collection, importe o arquivo no Postman. A variável `baseUrl` vem como `http://localhost:18080`; se estiver usando Docker Compose, troque para `http://localhost:8080`.
+
 ## O que existe na Fase 2
 
 - `Dockerfile`: gera a imagem da API.
@@ -44,6 +109,15 @@ push na branch main
 - `k8s/secret.yaml`: guarda valores sensíveis, como senha do banco e chave JWT.
 - `k8s/api-hpa.yaml`: configura o autoscaling da API.
 - `k8s/metrics-server.yaml`: instala o Metrics Server para o HPA conseguir ler CPU e memória.
+- `docs/postman/`: collection completa para consumo das APIs.
+
+## Video demonstrativo
+
+O link do video deve ser preenchido no momento da entrega, depois da gravacao e publicacao no YouTube ou Vimeo.
+
+```text
+Link do video: preencher apos publicacao
+```
 
 ## Pré-requisitos
 
@@ -230,12 +304,50 @@ Ele executa:
 - `terraform validate`;
 - `terraform plan`;
 - `terraform apply`;
+- recarregamento da imagem `oficina-mecanica-api:local` no cluster kind;
+- reinício controlado do deployment da API;
 - validação dos recursos Kubernetes;
 - validação do Swagger em `http://localhost:18080/swagger/index.html`.
 
 Como o deploy é local, a pipeline usa `runs-on: self-hosted`. O runner precisa estar instalado na máquina local e a máquina precisa ter Docker Desktop rodando, Terraform e `kubectl` disponíveis.
 
 O checkout das pipelines usa `clean: false` para preservar os arquivos locais ignorados pelo Git, como `.terraform/` e `terraform.tfstate`, que representam o estado da infraestrutura local gerenciada pelo Terraform.
+
+### Como configurar o self-hosted runner
+
+No GitHub, abra o repositorio e entre em:
+
+```text
+Settings -> Actions -> Runners -> New self-hosted runner
+```
+
+Escolha o sistema operacional da maquina local e siga os comandos mostrados pelo GitHub. Depois de configurar, deixe o runner em execucao com o comando indicado pela propria tela do GitHub, normalmente:
+
+```bash
+./run.sh
+```
+
+O runner precisa aparecer como `Idle` ou `Online` no GitHub antes de fazer push na `main`. Como os workflows usam `runs-on: self-hosted`, se o runner estiver desligado a pipeline fica aguardando uma maquina disponivel.
+
+### Como validar a pipeline
+
+Depois que o runner estiver online, faca push na `main`.
+
+O fluxo esperado e:
+
+```text
+Integracao continua
+  -> Build
+  -> Test
+
+Entrega continua
+  -> Build API Docker image
+  -> Terraform apply infrastructure
+  -> Reload API image in kind
+  -> Restart API deployment
+  -> Validate Kubernetes resources
+  -> Validate API endpoint
+```
 
 ## Como ver logs
 
@@ -487,6 +599,7 @@ http://localhost:8080/swagger/v1/swagger.json
 ### Ordens de serviço
 
 - `GET /api/ordensservico`
+- `GET /api/ordensservico?status={status}&ordenacao={maisAntigo|maisNovo}`
 - `GET /api/ordensservico/{id}`
 - `GET /api/ordensservico/tempo-medio-execucao`
 - `GET /api/ordensservico/cliente/{cpfCnpj}`
@@ -495,25 +608,69 @@ http://localhost:8080/swagger/v1/swagger.json
 - `POST /api/ordensservico/{id}/enviar-orcamento`
 - `POST /api/ordensservico/{id}/aprovar-orcamento`
 - `POST /api/ordensservico/{id}/recusar-orcamento`
+- `POST /api/ordensservico/{id}/notificacao-orcamento`
 - `POST /api/ordensservico/{id}/cancelar`
 - `POST /api/ordensservico/{id}/finalizar`
 - `POST /api/ordensservico/{id}/entregar`
 
 ## Fluxo principal da OS
 
-### 1. Abertura da OS
+### 1. Abertura da OS com cliente e veiculo existentes
 
-O atendente abre a OS informando:
+O atendente pode abrir a OS usando um cliente e um veiculo ja cadastrados.
 
 - `cpfCnpj`
 - `veiculoId`
+- `servicoIds`
+- `pecasInsumos`
 
 Exemplo:
 
 ```json
 {
   "cpfCnpj": "45513451808",
-  "veiculoId": "6963ed70-0133-414b-9a8e-7a85f3a67a9c"
+  "veiculoId": "6963ed70-0133-414b-9a8e-7a85f3a67a9c",
+  "servicoIds": [
+    "ac668df9-b051-4fbb-8207-8098a7a0ad25"
+  ],
+  "pecasInsumos": [
+    {
+      "pecaInsumoId": "91edc7cb-0e36-44ed-8f88-2b8e3037575c",
+      "quantidade": 1
+    }
+  ]
+}
+```
+
+### 2. Abertura da OS com cliente e veiculo novos
+
+Tambem e possivel abrir a OS ja criando o cliente e o veiculo na mesma chamada.
+
+Exemplo:
+
+```json
+{
+  "cliente": {
+    "nome": "Cliente OS",
+    "cpfCnpj": "52998224725",
+    "email": "cliente.os@email.com",
+    "telefone": "11977777777"
+  },
+  "veiculo": {
+    "placa": "BRA2E19",
+    "marca": "Honda",
+    "modelo": "Civic",
+    "ano": 2023
+  },
+  "servicoIds": [
+    "ac668df9-b051-4fbb-8207-8098a7a0ad25"
+  ],
+  "pecasInsumos": [
+    {
+      "pecaInsumoId": "91edc7cb-0e36-44ed-8f88-2b8e3037575c",
+      "quantidade": 1
+    }
+  ]
 }
 ```
 
@@ -521,7 +678,7 @@ Status inicial:
 
 - `Recebida`
 
-### 2. Início do diagnóstico
+### 3. Início do diagnóstico
 
 Endpoint:
 
@@ -533,7 +690,7 @@ Status:
 
 - `EmDiagnostico`
 
-### 3. Envio do orçamento
+### 4. Envio do orçamento
 
 O mecânico informa serviços e peças/insumos após o diagnóstico.
 
@@ -566,7 +723,7 @@ Comportamento:
 - registra envio simulado do orçamento ao cliente
 - altera o status para `AguardandoAprovacao`
 
-### 4. Aprovação ou recusa
+### 5. Aprovação ou recusa administrativa
 
 Aprovar:
 
@@ -588,7 +745,56 @@ Status:
 
 - `EmDiagnostico`
 
-### 5. Cancelamento
+### 6. Notificação externa de aprovação ou recusa
+
+Esse endpoint representa uma chamada externa, por exemplo um sistema/link de aprovação do cliente. Ele nao exige JWT.
+
+Endpoint:
+
+```http
+POST /api/ordensservico/{id}/notificacao-orcamento
+```
+
+Aprovação:
+
+```json
+{
+  "aprovado": true
+}
+```
+
+Recusa:
+
+```json
+{
+  "aprovado": false,
+  "motivoRecusa": "Cliente solicitou revisao do valor"
+}
+```
+
+Quando aprovado, o status muda para `EmExecucao`. Quando recusado, o status volta para `EmDiagnostico`.
+
+### 7. Listagem das ordens de serviço
+
+Endpoint:
+
+```http
+GET /api/ordensservico?status=Recebida&ordenacao=maisAntigo
+```
+
+Parametros opcionais:
+
+- `status`: `Recebida`, `EmDiagnostico`, `AguardandoAprovacao`, `EmExecucao`, `Finalizada`, `Entregue` ou `Cancelada`
+- `ordenacao`: `maisAntigo` ou `maisNovo`
+
+Regras aplicadas:
+
+- ordena por prioridade de status: `EmExecucao`, `AguardandoAprovacao`, `EmDiagnostico`, `Recebida`
+- dentro do mesmo status, usa a data de criacao
+- por padrao, mostra as mais antigas primeiro
+- nao lista OS `Finalizada`, `Entregue` ou `Cancelada`
+
+### 8. Cancelamento
 
 ```http
 POST /api/ordensservico/{id}/cancelar
@@ -598,7 +804,7 @@ Status:
 
 - `Cancelada`
 
-### 6. Finalização
+### 9. Finalização
 
 ```http
 POST /api/ordensservico/{id}/finalizar
@@ -608,7 +814,7 @@ Status:
 
 - `Finalizada`
 
-### 7. Entrega
+### 10. Entrega
 
 ```http
 POST /api/ordensservico/{id}/entregar
@@ -628,6 +834,8 @@ Status:
 - orçamento calculado automaticamente com base nos serviços e peças
 - envio de orçamento é simulado, sem integração real com e-mail
 - apenas rotas administrativas exigem JWT
+- notificacao externa de orçamento nao exige JWT
+- listagem de OS nao retorna ordens finalizadas, entregues ou canceladas
 - consulta do cliente pode ser feita por:
   - `GET /api/ordensservico/cliente/{cpfCnpj}`
 

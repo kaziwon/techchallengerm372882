@@ -50,9 +50,19 @@ jobs:
         working-directory: infra
         run: terraform plan -input=false
 
-      - name: Terraform apply
+      - name: Terraform apply infrastructure
         working-directory: infra
         run: terraform apply -auto-approve -input=false
+
+      - name: Reload API image in kind
+        working-directory: infra
+        run: terraform apply -auto-approve -input=false -replace=terraform_data.load_api_image
+
+      - name: Restart API deployment
+        run: |
+          export KUBECONFIG="$PWD/infra/.terraform/oficina-mecanica-kubeconfig"
+          kubectl rollout restart deployment/oficina-mecanica-api -n oficina-mecanica
+          kubectl rollout status deployment/oficina-mecanica-api -n oficina-mecanica --timeout=180s
 
       - name: Validate Kubernetes resources
         run: |

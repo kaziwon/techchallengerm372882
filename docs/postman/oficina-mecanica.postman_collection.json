@@ -1,0 +1,592 @@
+{
+  "info": {
+    "name": "Oficina Mecanica - Tech Challenge",
+    "description": "Collection das APIs da Oficina Mecanica para a Fase 2. Use baseUrl=http://localhost:18080 para Kubernetes local ou baseUrl=http://localhost:8080 para Docker Compose.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:18080"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "clienteId",
+      "value": ""
+    },
+    {
+      "key": "clienteCpfCnpj",
+      "value": "39053344705"
+    },
+    {
+      "key": "veiculoId",
+      "value": ""
+    },
+    {
+      "key": "servicoId",
+      "value": ""
+    },
+    {
+      "key": "pecaInsumoId",
+      "value": ""
+    },
+    {
+      "key": "ordemServicoId",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Autenticacao",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const token = body.token || body.Token;",
+                  "if (token) {",
+                  "  pm.collectionVariables.set('token', token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clientes",
+      "item": [
+        {
+          "name": "Listar clientes",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/clientes"
+          }
+        },
+        {
+          "name": "Obter cliente por id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/clientes/{{clienteId}}"
+          }
+        },
+        {
+          "name": "Criar cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('clienteId', body.id || body.Id);",
+                  "pm.collectionVariables.set('clienteCpfCnpj', body.cpfCnpj || body.CpfCnpj);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Cliente Postman\",\n  \"cpfCnpj\": \"39053344705\",\n  \"email\": \"cliente.postman@email.com\",\n  \"telefone\": \"11999999999\"\n}"
+            },
+            "url": "{{baseUrl}}/api/clientes"
+          }
+        },
+        {
+          "name": "Atualizar cliente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Cliente Postman Atualizado\",\n  \"cpfCnpj\": \"{{clienteCpfCnpj}}\",\n  \"email\": \"cliente.atualizado@email.com\",\n  \"telefone\": \"11888888888\"\n}"
+            },
+            "url": "{{baseUrl}}/api/clientes/{{clienteId}}"
+          }
+        },
+        {
+          "name": "Remover cliente",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/clientes/{{clienteId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Veiculos",
+      "item": [
+        {
+          "name": "Listar veiculos",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/veiculos"
+          }
+        },
+        {
+          "name": "Obter veiculo por id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/veiculos/{{veiculoId}}"
+          }
+        },
+        {
+          "name": "Criar veiculo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('veiculoId', body.id || body.Id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": \"{{clienteId}}\",\n  \"placa\": \"BRA2E19\",\n  \"marca\": \"Honda\",\n  \"modelo\": \"Civic\",\n  \"ano\": 2023\n}"
+            },
+            "url": "{{baseUrl}}/api/veiculos"
+          }
+        },
+        {
+          "name": "Atualizar veiculo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": \"{{clienteId}}\",\n  \"placa\": \"BRA2E19\",\n  \"marca\": \"Honda\",\n  \"modelo\": \"Civic Touring\",\n  \"ano\": 2023\n}"
+            },
+            "url": "{{baseUrl}}/api/veiculos/{{veiculoId}}"
+          }
+        },
+        {
+          "name": "Remover veiculo",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/veiculos/{{veiculoId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Servicos",
+      "item": [
+        {
+          "name": "Listar servicos",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/servicos"
+          }
+        },
+        {
+          "name": "Obter servico por id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/servicos/{{servicoId}}"
+          }
+        },
+        {
+          "name": "Criar servico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('servicoId', body.id || body.Id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Troca de oleo\",\n  \"descricao\": \"Troca de oleo do motor\",\n  \"preco\": 120.00\n}"
+            },
+            "url": "{{baseUrl}}/api/servicos"
+          }
+        },
+        {
+          "name": "Atualizar servico",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Troca de oleo premium\",\n  \"descricao\": \"Troca de oleo com filtro\",\n  \"preco\": 180.00\n}"
+            },
+            "url": "{{baseUrl}}/api/servicos/{{servicoId}}"
+          }
+        },
+        {
+          "name": "Remover servico",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/servicos/{{servicoId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pecas e insumos",
+      "item": [
+        {
+          "name": "Listar pecas",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/pecas"
+          }
+        },
+        {
+          "name": "Obter peca por id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/pecas/{{pecaInsumoId}}"
+          }
+        },
+        {
+          "name": "Criar peca",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('pecaInsumoId', body.id || body.Id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Filtro de oleo\",\n  \"descricao\": \"Filtro de oleo do motor\",\n  \"precoUnitario\": 35.00,\n  \"quantidadeEstoque\": 10\n}"
+            },
+            "url": "{{baseUrl}}/api/pecas"
+          }
+        },
+        {
+          "name": "Atualizar peca",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Filtro de oleo\",\n  \"descricao\": \"Filtro de oleo atualizado\",\n  \"precoUnitario\": 40.00,\n  \"quantidadeEstoque\": 15\n}"
+            },
+            "url": "{{baseUrl}}/api/pecas/{{pecaInsumoId}}"
+          }
+        },
+        {
+          "name": "Remover peca",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/pecas/{{pecaInsumoId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ordens de servico",
+      "item": [
+        {
+          "name": "Listar OS",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/ordensservico"
+          }
+        },
+        {
+          "name": "Listar OS por status e data",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/ordensservico?status=Recebida&ordenacao=maisAntigo"
+          }
+        },
+        {
+          "name": "Consultar OS por cliente",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/ordensservico/cliente/{{clienteCpfCnpj}}"
+          }
+        },
+        {
+          "name": "Obter OS por id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/ordensservico/{{ordemServicoId}}"
+          }
+        },
+        {
+          "name": "Tempo medio de execucao",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/ordensservico/tempo-medio-execucao"
+          }
+        },
+        {
+          "name": "Criar OS com cliente e veiculo existentes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('ordemServicoId', body.id || body.Id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cpfCnpj\": \"{{clienteCpfCnpj}}\",\n  \"veiculoId\": \"{{veiculoId}}\",\n  \"servicoIds\": [\n    \"{{servicoId}}\"\n  ],\n  \"pecasInsumos\": [\n    {\n      \"pecaInsumoId\": \"{{pecaInsumoId}}\",\n      \"quantidade\": 1\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/ordensservico"
+          }
+        },
+        {
+          "name": "Criar OS com cliente e veiculo novos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('ordemServicoId', body.id || body.Id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente\": {\n    \"nome\": \"Cliente OS Completa\",\n    \"cpfCnpj\": \"52998224725\",\n    \"email\": \"cliente.os@email.com\",\n    \"telefone\": \"11977777777\"\n  },\n  \"veiculo\": {\n    \"placa\": \"FIP2A26\",\n    \"marca\": \"Toyota\",\n    \"modelo\": \"Corolla\",\n    \"ano\": 2024\n  },\n  \"servicoIds\": [\n    \"{{servicoId}}\"\n  ],\n  \"pecasInsumos\": [\n    {\n      \"pecaInsumoId\": \"{{pecaInsumoId}}\",\n      \"quantidade\": 1\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/ordensservico"
+          }
+        },
+        {
+          "name": "Iniciar diagnostico",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/ordensservico/{{ordemServicoId}}/iniciar-diagnostico"
+          }
+        },
+        {
+          "name": "Enviar orcamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"servicoIds\": [\n    \"{{servicoId}}\"\n  ],\n  \"pecasInsumos\": [\n    {\n      \"pecaInsumoId\": \"{{pecaInsumoId}}\",\n      \"quantidade\": 1\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/ordensservico/{{ordemServicoId}}/enviar-orcamento"
+          }
+        },
+        {
+          "name": "Aprovar orcamento administrativo",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/ordensservico/{{ordemServicoId}}/aprovar-orcamento"
+          }
+        },
+        {
+          "name": "Recusar orcamento administrativo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivoRecusa\": \"Cliente solicitou revisao do valor\"\n}"
+            },
+            "url": "{{baseUrl}}/api/ordensservico/{{ordemServicoId}}/recusar-orcamento"
+          }
+        },
+        {
+          "name": "Notificacao externa de aprovacao",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aprovado\": true\n}"
+            },
+            "url": "{{baseUrl}}/api/ordensservico/{{ordemServicoId}}/notificacao-orcamento"
+          }
+        },
+        {
+          "name": "Notificacao externa de recusa",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aprovado\": false,\n  \"motivoRecusa\": \"Cliente recusou o orcamento\"\n}"
+            },
+            "url": "{{baseUrl}}/api/ordensservico/{{ordemServicoId}}/notificacao-orcamento"
+          }
+        },
+        {
+          "name": "Cancelar OS",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/ordensservico/{{ordemServicoId}}/cancelar"
+          }
+        },
+        {
+          "name": "Finalizar OS",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/ordensservico/{{ordemServicoId}}/finalizar"
+          }
+        },
+        {
+          "name": "Entregar OS",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/ordensservico/{{ordemServicoId}}/entregar"
+          }
+        }
+      ]
+    }
+  ]
+}
