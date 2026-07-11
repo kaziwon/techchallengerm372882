@@ -111,13 +111,6 @@ Para usar a collection, importe o arquivo no Postman. A variável `baseUrl` vem 
 - `k8s/metrics-server.yaml`: instala o Metrics Server para o HPA conseguir ler CPU e memória.
 - `docs/postman/`: collection completa para consumo das APIs.
 
-## Video demonstrativo
-
-O link do video deve ser preenchido no momento da entrega, depois da gravacao e publicacao no YouTube ou Vimeo.
-
-```text
-Link do video: preencher apos publicacao
-```
 
 ## Pré-requisitos
 
