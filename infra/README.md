@@ -174,3 +174,5 @@ terraform destroy
 ```
 
 Esse comando remove os manifests Kubernetes e o cluster kind criado localmente.
+
+Evite remover o container `oficina-mecanica-control-plane` diretamente pelo Docker quando quiser destruir a infraestrutura. Se isso acontecer, o Terraform pode manter no `terraform.tfstate` a referencia para um cluster que ja nao existe mais. A pipeline de entrega continua trata esse caso automaticamente: se o state aponta para o cluster, mas o container Docker nao existe, ela remove o state local antigo e recria a infraestrutura no proximo `terraform apply`.

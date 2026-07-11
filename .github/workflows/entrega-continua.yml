@@ -46,6 +46,22 @@ jobs:
         working-directory: infra
         run: terraform validate
 
+      - name: Recover stale local Terraform state
+        working-directory: infra
+        run: |
+          terraform state list > /tmp/oficina-terraform-state.txt || true
+
+          if grep -q '^kind_cluster\.oficina_mecanica$' /tmp/oficina-terraform-state.txt; then
+            if ! docker ps -a --format '{{.Names}}' | grep -qx 'oficina-mecanica-control-plane'; then
+              echo "Terraform state references the local kind cluster, but the Docker container no longer exists."
+              echo "Removing stale local state so Terraform can recreate the cluster."
+
+              while IFS= read -r resource; do
+                terraform state rm "$resource"
+              done < /tmp/oficina-terraform-state.txt
+            fi
+          fi
+
       - name: Terraform plan
         working-directory: infra
         run: terraform plan -input=false

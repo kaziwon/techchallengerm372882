@@ -411,6 +411,8 @@ terraform destroy
 
 Atenção: esse comando remove os recursos Kubernetes e o cluster kind criado localmente.
 
+Se o cluster for apagado diretamente pelo Docker, o Terraform pode continuar com o cluster registrado no `terraform.tfstate`. Nesse caso, a próxima execução pode falhar no `terraform plan`, porque o Terraform tenta consultar um cluster que não existe mais. A pipeline de entrega contínua já possui uma etapa de recuperação para esse caso, removendo o state local antigo antes de recriar o cluster.
+
 ## Resumo do fluxo da Fase 2
 
 ```bash
