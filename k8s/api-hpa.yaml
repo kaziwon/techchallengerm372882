@@ -9,7 +9,7 @@ spec:
     kind: Deployment
     name: oficina-mecanica-api
   minReplicas: 1
-  maxReplicas: 3
+  maxReplicas: 10
   metrics:
     - type: Resource
       resource:
