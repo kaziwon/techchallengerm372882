@@ -1,0 +1,105 @@
+name: Destruir infraestrutura AWS
+
+env:
+  AWS_REGION: us-east-1
+  PROJECT_NAME: oficina-mecanica
+  TERRAFORM_VERSION: 1.15.8
+  TF_IN_AUTOMATION: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Digite DESTRUIR para confirmar
+        required: true
+        type: string
+
+concurrency:
+  group: oficina-mecanica-aws-deploy
+  cancel-in-progress: false
+
+jobs:
+  destroy:
+    name: Destroy AWS resources
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Validate confirmation
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$CONFIRMATION" = "DESTRUIR"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Locate state bucket
+        id: state
+        run: |
+          account_id="$(aws sts get-caller-identity --query Account --output text)"
+          state_bucket="${PROJECT_NAME}-terraform-state-${account_id}"
+          echo "state_bucket=${state_bucket}" >> "$GITHUB_OUTPUT"
+
+          if aws s3api head-bucket --bucket "$state_bucket" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "O bucket de estado nao existe; nao ha infraestrutura Terraform para destruir."
+          fi
+
+      - name: Terraform init platform
+        if: steps.state.outputs.exists == 'true'
+        run: >-
+          terraform -chdir=infra/aws/platform init
+          -input=false
+          -backend-config="bucket=${{ steps.state.outputs.state_bucket }}"
+
+      - name: Configure kubectl for EKS
+        if: steps.state.outputs.exists == 'true'
+        run: |
+          cluster_name="$(terraform -chdir=infra/aws/platform output -raw eks_cluster_name)"
+          aws eks update-kubeconfig --region "$AWS_REGION" --name "$cluster_name"
+
+      - name: Terraform init workloads
+        if: steps.state.outputs.exists == 'true'
+        env:
+          TF_VAR_state_bucket_name: ${{ steps.state.outputs.state_bucket }}
+          TF_VAR_api_image: destroy-placeholder
+        run: >-
+          terraform -chdir=infra/aws/workloads init
+          -input=false
+          -backend-config="bucket=${{ steps.state.outputs.state_bucket }}"
+
+      - name: Destroy Kubernetes workloads
+        if: steps.state.outputs.exists == 'true'
+        env:
+          TF_VAR_state_bucket_name: ${{ steps.state.outputs.state_bucket }}
+          TF_VAR_api_image: destroy-placeholder
+        run: terraform -chdir=infra/aws/workloads destroy -auto-approve -input=false
+
+      - name: Destroy AWS platform
+        if: steps.state.outputs.exists == 'true'
+        run: terraform -chdir=infra/aws/platform destroy -auto-approve -input=false
+
+      - name: Destroy state bucket
+        if: steps.state.outputs.exists == 'true'
+        run: ./infra/aws/scripts/destroy-state.sh
