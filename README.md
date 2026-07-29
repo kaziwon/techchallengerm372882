@@ -1,6 +1,93 @@
 # Tech Challenge - Oficina Mecânica
 
 Sistema integrado para gestão de oficina mecânica, desenvolvido como MVP de back-end para o Tech Challenge da pós-graduação.
+
+# ---- Fase 3 - AWS Academy ----
+
+Nesta fase, a mesma aplicacao e a mesma infraestrutura Kubernetes da Fase 2
+passam a ser entregues na AWS. O deploy local continua disponivel, mas o fluxo
+automatico da branch `main` usa runners hospedados pelo GitHub e nao depende do
+notebook estar ligado.
+
+## Fluxo automatico
+
+```text
+push na main
+  -> Integracao continua em ubuntu-latest
+  -> build, testes automatizados e validacao Terraform
+  -> Entrega continua AWS
+  -> cria ou recupera o bucket S3 de estado
+  -> Terraform cria VPC, ECR, EKS, Metrics Server e RDS
+  -> Docker gera a imagem da API e publica no ECR
+  -> Terraform publica Deployment, Service, ConfigMap, Secret e HPA no EKS
+  -> pipeline valida pods, metricas, health check e Swagger
+```
+
+O deploy tambem pode ser iniciado manualmente em `Actions -> Entrega continua
+AWS -> Run workflow`. Isso e util depois de renovar as credenciais do
+laboratorio sem precisar criar um commit vazio.
+
+## Arquitetura AWS
+
+```mermaid
+flowchart TD
+    DEV["Push na main"] --> CI["GitHub Actions - CI"]
+    CI --> CD["GitHub Actions - CD AWS"]
+    CD --> S3["S3 - estado Terraform"]
+    CD --> ECR["ECR - imagem da API"]
+    CD --> TF["Terraform"]
+    TF --> VPC["VPC dedicada"]
+    VPC --> EKS["EKS + Managed Node Group"]
+    VPC --> RDS["RDS MySQL privado"]
+    ECR --> API["Deployment da API"]
+    EKS --> API
+    EKS --> HPA["HPA + Metrics Server"]
+    API --> RDS
+    API --> LB["Network Load Balancer"]
+    LB --> USER["Swagger e API publica"]
+```
+
+## Credenciais do AWS Academy
+
+As credenciais do Learner Lab sao temporarias. No repositorio do GitHub, em
+`Settings -> Secrets and variables -> Actions`, devem existir estes secrets:
+
+- `AWS_ACCESS_KEY_ID`;
+- `AWS_SECRET_ACCESS_KEY`;
+- `AWS_SESSION_TOKEN`.
+
+Quando a sessao expirar ou o laboratorio for reiniciado, copie os tres valores
+novos exibidos em `AWS Details -> AWS CLI` e atualize os secrets. Essa renovacao
+e a unica etapa manual que o AWS Academy impoe; nenhuma credencial fica no Git.
+
+## Recuperacao depois de Reset
+
+O workflow foi preparado para uma conta vazia. Se o Reset do Academy remover os
+recursos, a proxima execucao:
+
+1. identifica a conta autenticada;
+2. recria o bucket S3 se ele nao existir;
+3. recria a plataforma pelo Terraform;
+4. publica novamente a imagem;
+5. recria os workloads no EKS.
+
+Nao e necessario executar Terraform, Docker ou `kubectl` no notebook para esse
+fluxo. O primeiro deploy pode demorar porque EKS, RDS e Load Balancer precisam
+ser provisionados pela AWS.
+
+## Organizacao da infraestrutura AWS
+
+- `infra/aws/bootstrap/`: cria o bucket S3 dos estados Terraform;
+- `infra/aws/platform/`: cria rede, ECR, EKS, Metrics Server e RDS;
+- `infra/aws/workloads/`: publica API, configuracoes, secrets, Service e HPA;
+- `infra/aws/scripts/`: recupera ou remove o bootstrap de maneira automatica;
+- `.github/workflows/entrega-continua.yml`: entrega automatica na AWS;
+- `.github/workflows/destruir-infraestrutura-aws.yml`: destruicao manual protegida por confirmacao;
+- `.github/workflows/entrega-continua-local.yml`: preserva o deploy local da Fase 2.
+
+Para remover os recursos antes de encerrar o laboratorio, execute em Actions o
+workflow `Destruir infraestrutura AWS` e informe `DESTRUIR`. Ele remove primeiro
+os workloads, depois a plataforma e por ultimo o bucket de estado.
  
 # ---- Fase 2 ----
 
@@ -279,12 +366,12 @@ Para acompanhar a recriação do pod:
 kubectl rollout status deployment/oficina-mecanica-api -n oficina-mecanica
 ```
 
-## Pipeline CI/CD local
+## Pipeline de deploy local preservada
 
-As pipelines ficam separadas em dois workflows:
+Os artefatos e o deploy local da Fase 2 continuam disponiveis:
 
-- `.github/workflows/integracao-continua.yml`: integração contínua;
-- `.github/workflows/entrega-continua.yml`: entrega contínua.
+- `.github/workflows/integracao-continua.yml`: integracao continua;
+- `.github/workflows/entrega-continua-local.yml`: entrega local manual.
 
 O workflow de integração contínua roda em pull requests para a `main` e em pushes na `main`.
 
@@ -293,7 +380,9 @@ Ele executa:
 - build da solução;
 - testes automatizados.
 
-O workflow de entrega contínua roda quando o workflow de integração contínua termina com sucesso na `main`.
+O workflow local e iniciado manualmente em `Actions -> Entrega continua local
+(Fase 2) -> Run workflow`. Dessa forma, a Fase 3 pode usar a AWS automaticamente
+sem remover a possibilidade de demonstrar a infraestrutura local anterior.
 
 Ele executa:
 
@@ -307,9 +396,14 @@ Ele executa:
 - validação dos recursos Kubernetes;
 - validação do Swagger em `http://localhost:18080/swagger/index.html`.
 
-Como o deploy é local, a pipeline usa `runs-on: self-hosted`. O runner precisa estar instalado na máquina local e a máquina precisa ter Docker Desktop rodando, Terraform e `kubectl` disponíveis.
+Como esse deploy e local, somente o workflow
+`entrega-continua-local.yml` usa `runs-on: self-hosted`. O runner precisa estar
+instalado na maquina local e a maquina precisa ter Docker Desktop rodando,
+Terraform e `kubectl` disponiveis.
 
-O checkout das pipelines usa `clean: false` para preservar os arquivos locais ignorados pelo Git, como `.terraform/` e `terraform.tfstate`, que representam o estado da infraestrutura local gerenciada pelo Terraform.
+O checkout do deploy local usa `clean: false` para preservar os arquivos locais
+ignorados pelo Git, como `.terraform/` e `terraform.tfstate`, que representam o
+estado da infraestrutura local gerenciada pelo Terraform.
 
 ### Como configurar o self-hosted runner
 
@@ -325,20 +419,18 @@ Escolha o sistema operacional da maquina local e siga os comandos mostrados pelo
 ./run.sh
 ```
 
-O runner precisa aparecer como `Idle` ou `Online` no GitHub antes de fazer push na `main`. Como os workflows usam `runs-on: self-hosted`, se o runner estiver desligado a pipeline fica aguardando uma maquina disponivel.
+O runner precisa aparecer como `Idle` ou `Online` antes de iniciar manualmente o
+workflow local. O deploy automatico na AWS nao utiliza esse runner.
 
 ### Como validar a pipeline
 
-Depois que o runner estiver online, faca push na `main`.
+Depois que o runner estiver online, abra o workflow
+`Entrega continua local (Fase 2)` e selecione `Run workflow`.
 
 O fluxo esperado e:
 
 ```text
-Integracao continua
-  -> Build
-  -> Test
-
-Entrega continua
+Entrega continua local (Fase 2)
   -> Build API Docker image
   -> Terraform apply infrastructure
   -> Reload API image in kind

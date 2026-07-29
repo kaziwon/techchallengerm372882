@@ -1,0 +1,86 @@
+name: Entrega continua local (Fase 2)
+
+env:
+  API_IMAGE: oficina-mecanica-api:local
+  TF_IN_AUTOMATION: true
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-local:
+    name: Deploy local
+    runs-on: self-hosted
+    concurrency:
+      group: oficina-mecanica-local-deploy
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          clean: false
+
+      - name: Check local tools
+        run: |
+          docker version
+          terraform version
+          kubectl version --client
+
+      - name: Build API Docker image
+        run: docker build -t ${{ env.API_IMAGE }} .
+
+      - name: Terraform init
+        working-directory: infra
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        working-directory: infra
+        run: terraform validate
+
+      - name: Recover stale local Terraform state
+        working-directory: infra
+        run: |
+          terraform state list > /tmp/oficina-terraform-state.txt || true
+
+          if grep -q '^kind_cluster\.oficina_mecanica$' /tmp/oficina-terraform-state.txt; then
+            if ! docker ps -a --format '{{.Names}}' | grep -qx 'oficina-mecanica-control-plane'; then
+              echo "Terraform state references the local kind cluster, but the Docker container no longer exists."
+              echo "Removing stale local state so Terraform can recreate the cluster."
+
+              while IFS= read -r resource; do
+                terraform state rm "$resource"
+              done < /tmp/oficina-terraform-state.txt
+            fi
+          fi
+
+      - name: Terraform plan
+        working-directory: infra
+        run: terraform plan -input=false
+
+      - name: Terraform apply infrastructure
+        working-directory: infra
+        run: terraform apply -auto-approve -input=false
+
+      - name: Reload API image in kind
+        working-directory: infra
+        run: terraform apply -auto-approve -input=false -replace=terraform_data.load_api_image
+
+      - name: Restart API deployment
+        run: |
+          export KUBECONFIG="$PWD/infra/.terraform/oficina-mecanica-kubeconfig"
+          kubectl rollout restart deployment/oficina-mecanica-api -n oficina-mecanica
+          kubectl rollout status deployment/oficina-mecanica-api -n oficina-mecanica --timeout=180s
+
+      - name: Validate Kubernetes resources
+        run: |
+          export KUBECONFIG="$PWD/infra/.terraform/oficina-mecanica-kubeconfig"
+          kubectl get nodes
+          kubectl get pods -n oficina-mecanica
+          kubectl get service -n oficina-mecanica
+          kubectl get hpa -n oficina-mecanica
+
+      - name: Validate API endpoint
+        run: |
+          curl --fail --show-error --retry 12 --retry-all-errors --retry-delay 5 --max-time 10 --location --output /dev/null http://127.0.0.1:18080/health
+          curl --fail --show-error --retry 12 --retry-all-errors --retry-delay 5 --max-time 10 --location --output /dev/null http://127.0.0.1:18080/swagger/index.html

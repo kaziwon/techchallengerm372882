@@ -1,8 +1,11 @@
-name: Entrega continua
+name: Entrega continua AWS
 
 env:
-  API_IMAGE: oficina-mecanica-api:local
+  AWS_REGION: us-east-1
+  PROJECT_NAME: oficina-mecanica
+  TERRAFORM_VERSION: 1.15.8
   TF_IN_AUTOMATION: true
+  SOURCE_SHA: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
 on:
   workflow_run:
@@ -12,83 +15,191 @@ on:
       - main
     types:
       - completed
+  workflow_dispatch:
+
+concurrency:
+  group: oficina-mecanica-aws-deploy
+  cancel-in-progress: false
 
 jobs:
-  deploy-local:
-    name: Deploy local
-    runs-on: self-hosted
-    if: github.event.workflow_run.conclusion == 'success'
-    concurrency:
-      group: oficina-mecanica-local-deploy
-      cancel-in-progress: false
+  infrastructure:
+    name: Provision AWS infrastructure
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push')
+
+    permissions:
+      contents: read
+
+    outputs:
+      state_bucket: ${{ steps.bootstrap.outputs.state_bucket }}
+      ecr_repository_url: ${{ steps.platform_outputs.outputs.ecr_repository_url }}
+      eks_cluster_name: ${{ steps.platform_outputs.outputs.eks_cluster_name }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-          clean: false
+          ref: ${{ env.SOURCE_SHA }}
 
-      - name: Check local tools
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Validate AWS session
+        run: aws sts get-caller-identity
+
+      - name: Prepare Terraform state bucket
+        id: bootstrap
+        run: ./infra/aws/scripts/bootstrap-state.sh
+
+      - name: Terraform init platform
+        run: >-
+          terraform -chdir=infra/aws/platform init
+          -input=false
+          -backend-config="bucket=${{ steps.bootstrap.outputs.state_bucket }}"
+
+      - name: Terraform validate platform
+        run: terraform -chdir=infra/aws/platform validate -no-color
+
+      - name: Terraform plan platform
+        run: terraform -chdir=infra/aws/platform plan -input=false -no-color -out=platform.tfplan
+
+      - name: Terraform apply platform
+        run: terraform -chdir=infra/aws/platform apply -input=false platform.tfplan
+
+      - name: Read platform outputs
+        id: platform_outputs
         run: |
-          docker version
-          terraform version
-          kubectl version --client
+          echo "ecr_repository_url=$(terraform -chdir=infra/aws/platform output -raw ecr_repository_url)" >> "$GITHUB_OUTPUT"
+          echo "eks_cluster_name=$(terraform -chdir=infra/aws/platform output -raw eks_cluster_name)" >> "$GITHUB_OUTPUT"
 
-      - name: Build API Docker image
-        run: docker build -t ${{ env.API_IMAGE }} .
+  image:
+    name: Publish API image
+    runs-on: ubuntu-latest
+    needs: infrastructure
 
-      - name: Terraform init
-        working-directory: infra
-        run: terraform init -input=false
+    permissions:
+      contents: read
 
-      - name: Terraform validate
-        working-directory: infra
-        run: terraform validate
+    outputs:
+      image_uri: ${{ steps.image.outputs.image_uri }}
 
-      - name: Recover stale local Terraform state
-        working-directory: infra
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push API image
+        id: image
+        env:
+          ECR_REPOSITORY_URL: ${{ needs.infrastructure.outputs.ecr_repository_url }}
         run: |
-          terraform state list > /tmp/oficina-terraform-state.txt || true
+          image_uri="${ECR_REPOSITORY_URL}:${SOURCE_SHA}"
+          docker build --tag "$image_uri" --tag "${ECR_REPOSITORY_URL}:latest" .
+          docker push "$image_uri"
+          docker push "${ECR_REPOSITORY_URL}:latest"
+          echo "image_uri=${image_uri}" >> "$GITHUB_OUTPUT"
 
-          if grep -q '^kind_cluster\.oficina_mecanica$' /tmp/oficina-terraform-state.txt; then
-            if ! docker ps -a --format '{{.Names}}' | grep -qx 'oficina-mecanica-control-plane'; then
-              echo "Terraform state references the local kind cluster, but the Docker container no longer exists."
-              echo "Removing stale local state so Terraform can recreate the cluster."
+  deploy:
+    name: Deploy application to EKS
+    runs-on: ubuntu-latest
+    needs:
+      - infrastructure
+      - image
 
-              while IFS= read -r resource; do
-                terraform state rm "$resource"
-              done < /tmp/oficina-terraform-state.txt
-            fi
-          fi
+    permissions:
+      contents: read
 
-      - name: Terraform plan
-        working-directory: infra
-        run: terraform plan -input=false
+    env:
+      TF_VAR_state_bucket_name: ${{ needs.infrastructure.outputs.state_bucket }}
+      TF_VAR_api_image: ${{ needs.image.outputs.image_uri }}
 
-      - name: Terraform apply infrastructure
-        working-directory: infra
-        run: terraform apply -auto-approve -input=false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_SHA }}
 
-      - name: Reload API image in kind
-        working-directory: infra
-        run: terraform apply -auto-approve -input=false -replace=terraform_data.load_api_image
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Restart API deployment
-        run: |
-          export KUBECONFIG="$PWD/infra/.terraform/oficina-mecanica-kubeconfig"
-          kubectl rollout restart deployment/oficina-mecanica-api -n oficina-mecanica
-          kubectl rollout status deployment/oficina-mecanica-api -n oficina-mecanica --timeout=180s
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure kubectl for EKS
+        run: >-
+          aws eks update-kubeconfig
+          --region "$AWS_REGION"
+          --name "${{ needs.infrastructure.outputs.eks_cluster_name }}"
+
+      - name: Wait for EKS nodes
+        run: kubectl wait --for=condition=Ready nodes --all --timeout=300s
+
+      - name: Terraform init workloads
+        run: >-
+          terraform -chdir=infra/aws/workloads init
+          -input=false
+          -backend-config="bucket=${{ needs.infrastructure.outputs.state_bucket }}"
+
+      - name: Terraform validate workloads
+        run: terraform -chdir=infra/aws/workloads validate -no-color
+
+      - name: Terraform plan workloads
+        run: terraform -chdir=infra/aws/workloads plan -input=false -no-color -out=workloads.tfplan
+
+      - name: Terraform apply workloads
+        run: terraform -chdir=infra/aws/workloads apply -input=false workloads.tfplan
 
       - name: Validate Kubernetes resources
         run: |
-          export KUBECONFIG="$PWD/infra/.terraform/oficina-mecanica-kubeconfig"
+          kubectl rollout status deployment/metrics-server -n kube-system --timeout=300s
+          kubectl rollout status deployment/oficina-mecanica-api -n oficina-mecanica --timeout=300s
           kubectl get nodes
-          kubectl get pods -n oficina-mecanica
-          kubectl get service -n oficina-mecanica
-          kubectl get hpa -n oficina-mecanica
+          kubectl get pods,service,hpa -n oficina-mecanica
+          kubectl top pods -n oficina-mecanica
 
-      - name: Validate API endpoint
+      - name: Validate public API
+        id: api
         run: |
-          curl --fail --show-error --retry 12 --retry-all-errors --retry-delay 5 --max-time 10 --location --output /dev/null http://127.0.0.1:18080/health
-          curl --fail --show-error --retry 12 --retry-all-errors --retry-delay 5 --max-time 10 --location --output /dev/null http://127.0.0.1:18080/swagger/index.html
+          api_url="$(terraform -chdir=infra/aws/workloads output -raw api_url)"
+          curl --fail --show-error --retry 30 --retry-all-errors --retry-delay 10 --max-time 15 --location --output /dev/null "${api_url}/health"
+          curl --fail --show-error --retry 12 --retry-all-errors --retry-delay 10 --max-time 15 --location --output /dev/null "${api_url}/swagger/index.html"
+          echo "api_url=${api_url}" >> "$GITHUB_OUTPUT"
+          echo "### Deploy AWS concluido" >> "$GITHUB_STEP_SUMMARY"
+          echo "Swagger: ${api_url}/swagger/index.html" >> "$GITHUB_STEP_SUMMARY"
