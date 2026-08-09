@@ -46,7 +46,6 @@ resource "helm_release" "new_relic" {
         cluster                = data.terraform_remote_state.platform.outputs.eks_cluster_name
         customSecretName       = kubernetes_secret_v1.new_relic_license.metadata[0].name
         customSecretLicenseKey = "licenseKey"
-        provider               = "aws"
         lowDataMode            = true
         customAttributes = {
           environment = "aws"
