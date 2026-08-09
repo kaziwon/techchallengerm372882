@@ -35,3 +35,32 @@ variable "admin_username" {
   type        = string
   default     = "admin"
 }
+
+variable "new_relic_license_key" {
+  description = "Chave de ingestao usada pelos agentes New Relic da API e do Kubernetes."
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = length(trimspace(var.new_relic_license_key)) > 0
+    error_message = "A license key do New Relic nao pode ser vazia."
+  }
+}
+
+variable "new_relic_app_name" {
+  description = "Nome da entidade APM da API executada na AWS."
+  type        = string
+  default     = "oficina-mecanica-api-aws"
+}
+
+variable "new_relic_alert_policy_name" {
+  description = "Policy existente no New Relic que recebe as condicoes gerenciadas pelo Terraform."
+  type        = string
+  default     = "Oficina Mecanica - Monitoramento"
+}
+
+variable "new_relic_synthetics_location" {
+  description = "Localizacao publica usada pelo monitor sintetico do healthcheck."
+  type        = string
+  default     = "US_EAST_1"
+}

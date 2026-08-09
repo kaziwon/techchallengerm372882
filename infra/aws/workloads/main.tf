@@ -45,10 +45,18 @@ resource "kubernetes_config_map_v1" "application" {
   }
 
   data = {
-    ASPNETCORE_ENVIRONMENT = "Development"
-    ASPNETCORE_URLS        = "http://+:8080"
-    JwtSettings__Issuer    = "OficinaMecanica.Api"
-    JwtSettings__Audience  = "OficinaMecanica.Api"
+    ASPNETCORE_ENVIRONMENT                                        = "Development"
+    ASPNETCORE_URLS                                               = "http://+:8080"
+    JwtSettings__Issuer                                           = "OficinaMecanica.Api"
+    JwtSettings__Audience                                         = "OficinaMecanica.Api"
+    CORECLR_ENABLE_PROFILING                                      = "1"
+    NEW_RELIC_APP_NAME                                            = var.new_relic_app_name
+    NEW_RELIC_DISTRIBUTED_TRACING_ENABLED                         = "true"
+    NEW_RELIC_APPLICATION_LOGGING_ENABLED                         = "true"
+    NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED              = "true"
+    NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_ENABLED = "true"
+    NEW_RELIC_APPLICATION_LOGGING_LOCAL_DECORATING_ENABLED        = "false"
+    NEW_RELIC_LABELS                                              = "environment:aws"
   }
 }
 
@@ -70,6 +78,19 @@ resource "kubernetes_secret_v1" "application" {
     DATABASE_NAME                        = local.database_name
     DATABASE_USER                        = local.database_username
     DATABASE_PASSWORD                    = local.database_password
+  }
+}
+
+resource "kubernetes_secret_v1" "application_observability" {
+  metadata {
+    name      = "oficina-mecanica-observability-secret"
+    namespace = kubernetes_namespace_v1.application.metadata[0].name
+  }
+
+  type = "Opaque"
+
+  data = {
+    NEW_RELIC_LICENSE_KEY = var.new_relic_license_key
   }
 }
 
@@ -154,6 +175,12 @@ resource "kubernetes_deployment_v1" "api" {
             }
           }
 
+          env_from {
+            secret_ref {
+              name = kubernetes_secret_v1.application_observability.metadata[0].name
+            }
+          }
+
           readiness_probe {
             http_get {
               path   = "/health"
@@ -196,6 +223,8 @@ resource "kubernetes_deployment_v1" "api" {
       }
     }
   }
+
+  depends_on = [helm_release.new_relic]
 }
 
 resource "kubernetes_service_v1" "api" {

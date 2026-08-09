@@ -19,6 +19,15 @@ services:
       JwtSettings__SecretKey: oficina-mecanica-tech-challenge-secret-key-2026
       AdminUserSettings__Username: admin
       AdminUserSettings__Password: Admin@123
+      CORECLR_ENABLE_PROFILING: ${NEW_RELIC_ENABLED:-0}
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:-}
+      NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME:-oficina-mecanica-api}
+      NEW_RELIC_DISTRIBUTED_TRACING_ENABLED: "true"
+      NEW_RELIC_APPLICATION_LOGGING_ENABLED: "true"
+      NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED: "true"
+      NEW_RELIC_APPLICATION_LOGGING_FORWARDING_CONTEXT_DATA_ENABLED: "true"
+      NEW_RELIC_APPLICATION_LOGGING_LOCAL_DECORATING_ENABLED: "false"
+      NEW_RELIC_LABELS: environment:local
     ports:
       - "8080:8080"
     networks:
