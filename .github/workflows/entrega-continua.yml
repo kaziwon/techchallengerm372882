@@ -44,6 +44,16 @@ jobs:
         with:
           ref: ${{ env.SOURCE_SHA }}
 
+      - name: Validate New Relic configuration
+        env:
+          NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+          NEW_RELIC_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
+          NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID }}
+        run: |
+          test -n "$NEW_RELIC_LICENSE_KEY" || { echo "::error::GitHub Secret NEW_RELIC_LICENSE_KEY nao configurado."; exit 1; }
+          test -n "$NEW_RELIC_API_KEY" || { echo "::error::GitHub Secret NEW_RELIC_USER_API_KEY nao configurado."; exit 1; }
+          test -n "$NEW_RELIC_ACCOUNT_ID" || { echo "::error::GitHub Variable NEW_RELIC_ACCOUNT_ID nao configurada."; exit 1; }
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:
@@ -181,9 +191,19 @@ jobs:
         run: terraform -chdir=infra/aws/workloads validate -no-color
 
       - name: Terraform plan workloads
+        env:
+          TF_VAR_new_relic_license_key: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+          NEW_RELIC_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
+          NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID }}
+          NEW_RELIC_REGION: US
         run: terraform -chdir=infra/aws/workloads plan -input=false -no-color -out=workloads.tfplan
 
       - name: Terraform apply workloads
+        env:
+          TF_VAR_new_relic_license_key: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+          NEW_RELIC_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
+          NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID }}
+          NEW_RELIC_REGION: US
         run: terraform -chdir=infra/aws/workloads apply -input=false workloads.tfplan
 
       - name: Validate Kubernetes resources
@@ -191,6 +211,7 @@ jobs:
           kubectl rollout status deployment/metrics-server -n kube-system --timeout=300s
           kubectl rollout status deployment/oficina-mecanica-api -n oficina-mecanica --timeout=300s
           kubectl get nodes
+          kubectl get deployments,daemonsets,pods -n newrelic
           kubectl get pods,service,hpa -n oficina-mecanica
           kubectl top pods -n oficina-mecanica
 
@@ -203,3 +224,6 @@ jobs:
           echo "api_url=${api_url}" >> "$GITHUB_OUTPUT"
           echo "### Deploy AWS concluido" >> "$GITHUB_STEP_SUMMARY"
           echo "Swagger: ${api_url}/swagger/index.html" >> "$GITHUB_STEP_SUMMARY"
+          echo "New Relic APM: $(terraform -chdir=infra/aws/workloads output -raw new_relic_app_name)" >> "$GITHUB_STEP_SUMMARY"
+          echo "New Relic Kubernetes: $(terraform -chdir=infra/aws/workloads output -raw new_relic_cluster_name)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Monitor de uptime: $(terraform -chdir=infra/aws/workloads output -raw new_relic_health_monitor_name)" >> "$GITHUB_STEP_SUMMARY"

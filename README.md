@@ -20,7 +20,8 @@ push na main
   -> Terraform cria VPC, ECR, EKS, Metrics Server e RDS
   -> Docker gera a imagem da API e publica no ECR
   -> Terraform publica Deployment, Service, ConfigMap, Secret e HPA no EKS
-  -> pipeline valida pods, metricas, health check e Swagger
+  -> Terraform instala o New Relic no EKS e cria uptime e alertas
+  -> pipeline valida pods, metricas, health check, observabilidade e Swagger
 ```
 
 O deploy tambem pode ser iniciado manualmente em `Actions -> Entrega continua
@@ -45,6 +46,9 @@ flowchart TD
     API --> RDS
     API --> LB["Network Load Balancer"]
     LB --> USER["Swagger e API publica"]
+    EKS --> NRK8S["New Relic Kubernetes"]
+    API --> NRAPM["New Relic APM + Logs"]
+    NRSYN["New Relic Synthetics"] --> LB
 ```
 
 ## Credenciais do AWS Academy
@@ -59,6 +63,27 @@ As credenciais do Learner Lab sao temporarias. No repositorio do GitHub, em
 Quando a sessao expirar ou o laboratorio for reiniciado, copie os tres valores
 novos exibidos em `AWS Details -> AWS CLI` e atualize os secrets. Essa renovacao
 e a unica etapa manual que o AWS Academy impoe; nenhuma credencial fica no Git.
+
+Para a observabilidade, configure tambem:
+
+- Secret `NEW_RELIC_LICENSE_KEY`: chave de ingestao dos agentes;
+- Secret `NEW_RELIC_USER_API_KEY`: User API key usada pelo Terraform;
+- Variable `NEW_RELIC_ACCOUNT_ID`: identificador numerico da conta.
+
+A pipeline habilita o agente .NET somente no pod da AWS, instala o chart oficial
+`nri-bundle` no EKS e cria um monitor externo para `/health`. O ambiente local
+continua controlado por `NEW_RELIC_ENABLED` no `.env`.
+
+## Monitoramento e observabilidade
+
+- latencia e erros HTTP: entidade APM `oficina-mecanica-api-aws`;
+- CPU e memoria: cluster EKS na area Kubernetes do New Relic;
+- uptime: monitor `Oficina Mecanica API - AWS - Health`, executado a cada minuto;
+- falhas nas OS: alerta para respostas 5xx das rotas `OrdensServico`;
+- logs estruturados: JSON com correlacao por `trace.id` e `span.id`.
+
+As condicoes novas usam a policy `Oficina Mecanica - Monitoramento` e, por isso,
+aproveitam o workflow de notificacao por e-mail ja configurado nessa policy.
 
 ## Recuperacao depois de Reset
 
@@ -75,11 +100,15 @@ Nao e necessario executar Terraform, Docker ou `kubectl` no notebook para esse
 fluxo. O primeiro deploy pode demorar porque EKS, RDS e Load Balancer precisam
 ser provisionados pela AWS.
 
+Como New Relic esta fora da conta AWS, o Reset do Academy nao apaga seus
+recursos. Execute primeiro o workflow `Destruir infraestrutura AWS` sempre que
+possivel; ele remove o monitor e as condicoes antes de apagar o estado Terraform.
+
 ## Organizacao da infraestrutura AWS
 
 - `infra/aws/bootstrap/`: cria o bucket S3 dos estados Terraform;
 - `infra/aws/platform/`: cria rede, ECR, EKS, Metrics Server e RDS;
-- `infra/aws/workloads/`: publica API, configuracoes, secrets, Service e HPA;
+- `infra/aws/workloads/`: publica API, observabilidade, configuracoes, secrets, Service e HPA;
 - `infra/aws/scripts/`: recupera ou remove o bootstrap de maneira automatica;
 - `.github/workflows/entrega-continua.yml`: entrega automatica na AWS;
 - `.github/workflows/destruir-infraestrutura-aws.yml`: destruicao manual protegida por confirmacao;

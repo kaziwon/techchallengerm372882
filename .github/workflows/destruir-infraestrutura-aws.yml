@@ -79,6 +79,15 @@ jobs:
           cluster_name="$(terraform -chdir=infra/aws/platform output -raw eks_cluster_name)"
           aws eks update-kubeconfig --region "$AWS_REGION" --name "$cluster_name"
 
+      - name: Validate New Relic configuration
+        if: steps.state.outputs.exists == 'true'
+        env:
+          NEW_RELIC_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
+          NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID }}
+        run: |
+          test -n "$NEW_RELIC_API_KEY" || { echo "::error::GitHub Secret NEW_RELIC_USER_API_KEY nao configurado."; exit 1; }
+          test -n "$NEW_RELIC_ACCOUNT_ID" || { echo "::error::GitHub Variable NEW_RELIC_ACCOUNT_ID nao configurada."; exit 1; }
+
       - name: Terraform init workloads
         if: steps.state.outputs.exists == 'true'
         env:
@@ -94,6 +103,10 @@ jobs:
         env:
           TF_VAR_state_bucket_name: ${{ steps.state.outputs.state_bucket }}
           TF_VAR_api_image: destroy-placeholder
+          TF_VAR_new_relic_license_key: destroy-placeholder
+          NEW_RELIC_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
+          NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID }}
+          NEW_RELIC_REGION: US
         run: terraform -chdir=infra/aws/workloads destroy -auto-approve -input=false
 
       - name: Destroy AWS platform
