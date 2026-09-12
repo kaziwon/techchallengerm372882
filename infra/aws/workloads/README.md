@@ -1,7 +1,7 @@
 # Workloads Kubernetes na AWS
 
-Este stack e executado depois de `bootstrap` e `platform`. Ele le o estado da
-plataforma no S3 e publica no EKS apenas os componentes da aplicacao:
+Este stack e executado depois da preparacao do bucket e do stack `platform`. Ele
+le o estado da plataforma no S3 e publica no EKS apenas os componentes da aplicacao:
 
 - namespace;
 - ConfigMap;
@@ -61,7 +61,8 @@ export TF_VAR_new_relic_license_key="<license-key>"
 export NEW_RELIC_API_KEY="<user-api-key>"
 export NEW_RELIC_ACCOUNT_ID="<account-id>"
 export NEW_RELIC_REGION="US"
-STATE_BUCKET="$(terraform -chdir=infra/aws/bootstrap output -raw state_bucket_name)"
+ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+STATE_BUCKET="oficina-mecanica-terraform-state-${ACCOUNT_ID}"
 ECR_IMAGE="$(terraform -chdir=infra/aws/platform output -raw ecr_repository_url):latest"
 
 terraform -chdir=infra/aws/workloads init \

@@ -17,12 +17,14 @@ AWS Academy.
 
 ## Estado remoto
 
-O estado desta plataforma fica no bucket criado pelo bootstrap. Para inicializar
-localmente:
+O estado desta plataforma fica no bucket preparado pelo script de bootstrap.
+Para inicializar localmente:
 
 ```bash
 export AWS_PROFILE=academy
-STATE_BUCKET="$(terraform -chdir=infra/aws/bootstrap output -raw state_bucket_name)"
+./infra/aws/scripts/bootstrap-state.sh
+ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+STATE_BUCKET="oficina-mecanica-terraform-state-${ACCOUNT_ID}"
 
 terraform -chdir=infra/aws/platform init \
   -backend-config="bucket=${STATE_BUCKET}"
@@ -45,13 +47,13 @@ O `plan` consulta a conta e mostra os recursos antes da criacao. Somente o
 
 ## Destruir
 
-Destrua primeiro a plataforma e somente depois o bootstrap:
+Destrua primeiro a plataforma e somente depois o bucket de estado:
 
 ```bash
 export AWS_PROFILE=academy
 terraform -chdir=infra/aws/platform destroy
-terraform -chdir=infra/aws/bootstrap destroy
+./infra/aws/scripts/destroy-state.sh
 ```
 
-Na pipeline final, o bootstrap, o backend e a plataforma serao preparados
+Na pipeline final, o bucket, o backend e a plataforma serao preparados
 automaticamente antes da publicacao da aplicacao.

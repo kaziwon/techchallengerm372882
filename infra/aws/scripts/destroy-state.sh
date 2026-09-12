@@ -2,10 +2,7 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-BOOTSTRAP_DIR="${SCRIPT_DIR}/../bootstrap"
 PROJECT_NAME="${PROJECT_NAME:-oficina-mecanica}"
-AWS_REGION="${AWS_REGION:-us-east-1}"
 
 account_id="$(aws sts get-caller-identity --query Account --output text)"
 state_bucket="${PROJECT_NAME}-terraform-state-${account_id}"
@@ -15,29 +12,22 @@ if ! aws s3api head-bucket --bucket "${state_bucket}" >/dev/null 2>&1; then
   exit 0
 fi
 
-terraform -chdir="${BOOTSTRAP_DIR}" init -input=false
+echo "Esvaziando o bucket de estado ${state_bucket}."
+aws s3 rm "s3://${state_bucket}" --recursive
 
-import_resource() {
-  local address="$1"
+while true; do
+  versions="$(aws s3api list-object-versions --bucket "${state_bucket}" --max-keys 1000)"
+  delete_payload="$(jq -c '{Objects: (((.Versions // []) + (.DeleteMarkers // [])) | map({Key: .Key, VersionId: .VersionId})), Quiet: true}' <<< "${versions}")"
+  object_count="$(jq '.Objects | length' <<< "${delete_payload}")"
 
-  if terraform -chdir="${BOOTSTRAP_DIR}" state show "${address}" >/dev/null 2>&1; then
-    return
+  if [[ "${object_count}" == "0" ]]; then
+    break
   fi
 
-  terraform -chdir="${BOOTSTRAP_DIR}" import \
-    -input=false \
-    -var="aws_region=${AWS_REGION}" \
-    "${address}" \
-    "${state_bucket}" || true
-}
+  aws s3api delete-objects \
+    --bucket "${state_bucket}" \
+    --delete "${delete_payload}" >/dev/null
+done
 
-import_resource aws_s3_bucket.terraform_state
-import_resource aws_s3_bucket_public_access_block.terraform_state
-import_resource aws_s3_bucket_versioning.terraform_state
-import_resource aws_s3_bucket_server_side_encryption_configuration.terraform_state
-import_resource aws_s3_bucket_policy.require_tls
-
-terraform -chdir="${BOOTSTRAP_DIR}" destroy \
-  -auto-approve \
-  -input=false \
-  -var="aws_region=${AWS_REGION}"
+aws s3api delete-bucket --bucket "${state_bucket}"
+echo "Bucket de estado removido: ${state_bucket}"

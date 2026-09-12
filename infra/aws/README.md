@@ -1,16 +1,21 @@
 # Infraestrutura AWS
 
-A infraestrutura foi dividida em tres stacks Terraform para respeitar a ordem
-em que os recursos passam a existir:
+A infraestrutura foi dividida em um bootstrap tecnico e dois stacks Terraform
+para respeitar a ordem em que os recursos passam a existir:
 
-1. `bootstrap`: cria o bucket S3 usado como backend;
+1. `scripts/bootstrap-state.sh`: cria ou recupera o bucket S3 usado como backend;
 2. `platform`: cria VPC, ECR, EKS, Metrics Server e RDS;
 3. `workloads`: conecta ao EKS, publica a API atras do Kong Gateway e configura a observabilidade no New Relic.
 
 Essa separacao resolve o problema do primeiro deploy: o Terraform nao pode usar
-como backend um bucket que ainda nao existe. O bootstrap usa estado local apenas
-durante a execucao do runner. Nas execucoes seguintes, o script importa o bucket
-existente antes de reconciliar sua configuracao.
+como backend um bucket que ainda nao existe. O script usa o AWS CLI de forma
+idempotente: cria e configura o bucket quando necessario ou reutiliza o existente.
+
+O Learner Lab aplica uma Service Control Policy que nega
+`s3:GetBucketObjectLockConfiguration`. Como o recurso `aws_s3_bucket` consulta
+essa API mesmo sem Object Lock configurado, o bucket de backend e a unica excecao
+ao provider AWS. EKS, RDS, VPC, ECR, Kubernetes, Kong e New Relic permanecem
+declarados e gerenciados pelo Terraform.
 
 ## Execucao pela pipeline
 
