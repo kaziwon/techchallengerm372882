@@ -39,3 +39,13 @@ output "new_relic_health_monitor_name" {
   description = "Nome do monitor sintetico que consulta o endpoint de healthcheck."
   value       = newrelic_synthetics_monitor.api_health.name
 }
+
+output "new_relic_dashboard_name" {
+  description = "Nome do dashboard operacional criado no New Relic."
+  value       = newrelic_one_dashboard.operations.name
+}
+
+output "new_relic_dashboard_url" {
+  description = "Link direto para o dashboard operacional no New Relic."
+  value       = newrelic_one_dashboard.operations.permalink
+}

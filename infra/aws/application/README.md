@@ -6,7 +6,7 @@ Esta raiz Terraform implanta somente os recursos pertencentes a aplicacao:
 - Deployment e Service interno da API;
 - Horizontal Pod Autoscaler (HPA);
 - regras, consumidor e plugin JWT da aplicacao no Kong;
-- monitor sintetico e alertas da aplicacao no New Relic.
+- monitor sintetico, alertas e dashboard da aplicacao no New Relic.
 
 VPC e RDS pertencem ao repositorio de banco. EKS, ECR, Metrics Server, Kong e o
 agente de infraestrutura do New Relic pertencem ao repositorio de Kubernetes.

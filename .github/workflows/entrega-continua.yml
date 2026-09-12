@@ -236,3 +236,4 @@ jobs:
           echo "New Relic APM: $(terraform -chdir=infra/aws/application output -raw new_relic_app_name)" >> "$GITHUB_STEP_SUMMARY"
           echo "New Relic Kubernetes: $(terraform -chdir=infra/aws/application output -raw new_relic_cluster_name)" >> "$GITHUB_STEP_SUMMARY"
           echo "Monitor de uptime: $(terraform -chdir=infra/aws/application output -raw new_relic_health_monitor_name)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Dashboard New Relic: $(terraform -chdir=infra/aws/application output -raw new_relic_dashboard_url)" >> "$GITHUB_STEP_SUMMARY"

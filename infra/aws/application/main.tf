@@ -45,8 +45,9 @@ resource "kubernetes_config_map_v1" "application" {
   }
 
   data = {
-    ASPNETCORE_ENVIRONMENT                                        = "Development"
+    ASPNETCORE_ENVIRONMENT                                        = "Production"
     ASPNETCORE_URLS                                               = "http://+:8080"
+    Swagger__Enabled                                              = "true"
     JwtSettings__Issuer                                           = "OficinaMecanica.Api"
     JwtSettings__Audience                                         = "OficinaMecanica.Api"
     CORECLR_ENABLE_PROFILING                                      = "1"

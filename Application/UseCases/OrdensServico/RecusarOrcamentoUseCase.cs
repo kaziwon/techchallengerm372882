@@ -27,9 +27,12 @@ public class RecusarOrcamentoUseCase
             throw new InvalidOperationException(OrcamentoNaoEstaAguardandoAprovacao);
         }
 
+        var agora = DateTime.UtcNow;
+
         ordemServico.Status = StatusOrdemServico.EmDiagnostico;
         ordemServico.StatusAprovacaoOrcamento = StatusAprovacaoOrcamento.Recusado;
         ordemServico.MotivoRecusaOrcamento = input.MotivoRecusa;
+        ordemServico.DiagnosticoEm = agora;
 
         return OrdemServicoOutputMapper.Mapear(_ordemServicoGateway.Atualizar(ordemServico)!);
     }

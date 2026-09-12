@@ -1,5 +1,5 @@
 # Tech Challenge - Oficina Mecânica
-.
+
 Sistema integrado para gestão de oficina mecânica, desenvolvido como MVP de back-end para o Tech Challenge da pós-graduação.
 
 # ---- Fase 3 - AWS Academy ----
@@ -21,6 +21,54 @@ estar ligado.
 Cada repositorio possui integracao continua, entrega manual para producao e
 destruicao dos recursos sob sua responsabilidade.
 
+## Tecnologias da Fase 3
+
+- C# e .NET 10;
+- ASP.NET Core, Entity Framework Core e MySQL;
+- Docker e Amazon ECR;
+- Amazon EKS, Kubernetes, Helm e HPA;
+- Kong Gateway em modo DB-less;
+- AWS Lambda e Function URL;
+- Terraform com state remoto no Amazon S3;
+- New Relic APM, Logs, Synthetics e Kubernetes;
+- GitHub Actions para CI e CD.
+
+## Documentacao e artefatos
+
+- [Indice da documentacao da Fase 3](docs/README.md)
+- [Diagrama de componentes de nuvem](docs/architecture/componentes-cloud.md)
+- [Diagramas de sequencia](docs/architecture/sequencias.md)
+- [Justificativa do banco e diagrama ER](docs/architecture/banco-de-dados.md)
+- [Monitoramento, dashboard e roteiro de demonstracao](docs/observabilidade.md)
+- [Checklist da entrega final](docs/entrega-final.md)
+- [Collection Postman](docs/postman/oficina-mecanica.postman_collection.json)
+
+O Swagger e publicado pelo Kong em `/swagger/index.html`. Como o hostname do
+Load Balancer e criado a cada ambiente, o link completo aparece no Summary da
+entrega da aplicacao.
+
+## Validacao local sem AWS
+
+Os comandos abaixo verificam a aplicacao e a infraestrutura declarada, mas nao
+criam recursos e nao consomem creditos do AWS Academy:
+
+```bash
+dotnet restore OficinaMecanica.Api.sln
+dotnet build OficinaMecanica.Api.sln --configuration Release --no-restore
+dotnet test OficinaMecanica.Api.sln --configuration Release --no-restore
+
+terraform fmt -check -recursive infra/aws/application
+terraform -chdir=infra/aws/application init -backend=false
+terraform -chdir=infra/aws/application validate
+
+helm lint infra/aws/application/charts/kong-auth \
+  --set jwt.issuer=OficinaMecanica.Api \
+  --set jwt.secret=abcdefghijklmnopqrstuvwxyz1234567890
+```
+
+O `terraform init -backend=false` baixa somente os providers e ignora o backend
+S3. Nao execute `terraform apply` durante essa validacao.
+
 ## Fluxo de CI e deploy manual
 
 ```text
@@ -39,11 +87,28 @@ O deploy de producao existe somente como execucao manual nas Actions de cada
 repositorio, selecionando a branch `main`. Assim, commits e pull requests
 executam verificacoes sem criar recursos ou gerar custos na AWS.
 
-O bucket S3 de estado e a unica excecao ao provider AWS do Terraform: ele precisa
-existir antes da inicializacao do backend e e preparado pelo AWS CLI. Essa forma
-tambem evita a consulta de Object Lock proibida pela politica da AWS Academy.
-Todos os recursos AWS continuam declarados e provisionados pelo Terraform, mas
-agora cada state e cada pipeline possuem um proprietario claro.
+## Implantar a aplicacao em producao
+
+Antes desta entrega, os workflows de banco e Kubernetes precisam ter concluido
+com sucesso.
+
+1. Inicie o AWS Academy Learner Lab.
+2. Atualize os repository secrets AWS e New Relic e a variable
+   `NEW_RELIC_ACCOUNT_ID`.
+3. Confirme que a versao desejada foi integrada na branch `main`.
+4. Abra `Actions -> Entrega continua AWS - Aplicacao`.
+5. Clique em `Run workflow`, selecione `main` e confirme.
+6. Aguarde o Summary exibir endpoint do Kong, Swagger, APM, monitor e dashboard.
+
+O workflow publica a imagem no ECR, executa Terraform e valida automaticamente
+o healthcheck, o Swagger, a rejeicao sem JWT e o acesso com JWT administrativo.
+Depois dele, execute a entrega do repositorio da Lambda.
+
+O bucket S3 de estado e uma excecao tecnica: ele precisa existir antes da
+inicializacao do backend e e preparado por um script com AWS CLI. Essa forma
+evita a consulta de Object Lock proibida pela politica da AWS Academy. A VPC, o
+RDS, o EKS, o ECR, os recursos Kubernetes, a API e a Lambda continuam
+declarados e provisionados pelo Terraform, cada um em seu state e repositorio.
 
 ## Arquitetura AWS
 
@@ -125,7 +190,8 @@ continua controlado por `NEW_RELIC_ENABLED` no `.env`.
 - CPU e memoria: cluster EKS na area Kubernetes do New Relic;
 - uptime: monitor `Oficina Mecanica API - AWS - Health`, executado a cada minuto;
 - falhas nas OS: alerta para respostas 5xx das rotas `OrdensServico`;
-- logs estruturados: JSON com correlacao por `trace.id` e `span.id`.
+- logs estruturados: JSON com `X-Correlation-ID`, `trace.id` e `span.id`;
+- dashboard: `Oficina Mecanica - Operacao AWS`, com paginas de negocio e operacao.
 
 As condicoes novas usam a policy `Oficina Mecanica - Monitoramento` e, por isso,
 aproveitam o workflow de notificacao por e-mail ja configurado nessa policy.
