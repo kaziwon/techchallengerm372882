@@ -231,17 +231,11 @@ resource "kubernetes_service_v1" "api" {
   metadata {
     name      = local.app_name
     namespace = kubernetes_namespace_v1.application.metadata[0].name
-
-    annotations = {
-      "service.beta.kubernetes.io/aws-load-balancer-type" = "nlb"
-    }
   }
-
-  wait_for_load_balancer = true
 
   spec {
     selector = local.labels
-    type     = "LoadBalancer"
+    type     = "ClusterIP"
 
     port {
       name        = "http"

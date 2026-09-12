@@ -5,7 +5,7 @@ em que os recursos passam a existir:
 
 1. `bootstrap`: cria o bucket S3 usado como backend;
 2. `platform`: cria VPC, ECR, EKS, Metrics Server e RDS;
-3. `workloads`: conecta ao EKS, publica a API e configura a observabilidade no New Relic.
+3. `workloads`: conecta ao EKS, publica a API atras do Kong Gateway e configura a observabilidade no New Relic.
 
 Essa separacao resolve o problema do primeiro deploy: o Terraform nao pode usar
 como backend um bucket que ainda nao existe. O bootstrap usa estado local apenas
@@ -14,15 +14,20 @@ existente antes de reconciliar sua configuracao.
 
 ## Execucao pela pipeline
 
-O caminho normal e `.github/workflows/entrega-continua.yml`. A pipeline:
+O caminho de producao e a execucao manual de
+`.github/workflows/entrega-continua.yml` a partir da branch `main`. A pipeline:
 
 1. autentica com as credenciais temporarias guardadas nos GitHub Secrets;
 2. executa `scripts/bootstrap-state.sh`;
 3. executa `plan` e `apply` de `platform`;
 4. gera e publica a imagem no ECR;
 5. executa `plan` e `apply` de `workloads`;
-6. instala a integracao Kubernetes do New Relic e configura APM, uptime e alertas;
-7. valida o rollout, o HPA, as metricas e os endpoints publicos.
+6. instala o Kong e deixa a API acessivel apenas por seu Service interno;
+7. instala a integracao Kubernetes do New Relic e configura APM, uptime e alertas;
+8. valida o Kong, o rollout, o HPA, as metricas e os endpoints publicos.
+
+Pull requests e commits executam somente a integracao continua. Eles nao
+provisionam recursos na AWS automaticamente.
 
 Os estados de `platform` e `workloads` ficam em chaves diferentes no mesmo
 bucket S3, com versionamento, criptografia e lock habilitados.
