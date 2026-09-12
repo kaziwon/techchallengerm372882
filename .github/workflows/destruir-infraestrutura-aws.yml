@@ -1,4 +1,4 @@
-name: Destruir infraestrutura AWS
+name: Destruir infraestrutura AWS - Aplicacao
 
 env:
   AWS_REGION: us-east-1
@@ -15,12 +15,12 @@ on:
         type: string
 
 concurrency:
-  group: oficina-mecanica-aws-deploy
+  group: oficina-mecanica-application-deploy
   cancel-in-progress: false
 
 jobs:
   destroy:
-    name: Destroy AWS resources
+    name: Destroy application resources
     runs-on: ubuntu-latest
 
     permissions:
@@ -36,7 +36,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
+        uses: ./.github/actions/configure-aws-credentials
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -52,31 +52,43 @@ jobs:
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
 
-      - name: Locate state bucket
+      - name: Locate application state
         id: state
         run: |
           account_id="$(aws sts get-caller-identity --query Account --output text)"
           state_bucket="${PROJECT_NAME}-terraform-state-${account_id}"
           echo "state_bucket=${state_bucket}" >> "$GITHUB_OUTPUT"
 
-          if aws s3api head-bucket --bucket "$state_bucket" >/dev/null 2>&1; then
+          if aws s3api head-object --bucket "$state_bucket" --key oficina-mecanica/application/terraform.tfstate >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "O bucket de estado nao existe; nao ha infraestrutura Terraform para destruir."
+            echo "O state da aplicacao nao existe. Nada para destruir."
           fi
 
-      - name: Terraform init platform
+      - name: Verify Lambda was destroyed
         if: steps.state.outputs.exists == 'true'
-        run: >-
-          terraform -chdir=infra/aws/platform init
-          -input=false
-          -backend-config="bucket=${{ steps.state.outputs.state_bucket }}"
+        env:
+          STATE_BUCKET: ${{ steps.state.outputs.state_bucket }}
+        run: |
+          lambda_state="$(mktemp)"
+
+          if aws s3 cp "s3://${STATE_BUCKET}/oficina-mecanica/auth-lambda/terraform.tfstate" "$lambda_state" >/dev/null 2>&1; then
+            managed_resources="$(jq '[.resources[]? | select(.mode == "managed")] | length' "$lambda_state")"
+            test "$managed_resources" -eq 0 || {
+              echo "::error::Destrua a Lambda antes da aplicacao."
+              exit 1
+            }
+          fi
 
       - name: Configure kubectl for EKS
         if: steps.state.outputs.exists == 'true'
+        env:
+          STATE_BUCKET: ${{ steps.state.outputs.state_bucket }}
         run: |
-          cluster_name="$(terraform -chdir=infra/aws/platform output -raw eks_cluster_name)"
+          cluster_state="$(mktemp)"
+          aws s3 cp "s3://${STATE_BUCKET}/oficina-mecanica/kubernetes-cluster/terraform.tfstate" "$cluster_state" >/dev/null
+          cluster_name="$(jq -er '.outputs.eks_cluster_name.value' "$cluster_state")"
           aws eks update-kubeconfig --region "$AWS_REGION" --name "$cluster_name"
 
       - name: Validate New Relic configuration
@@ -88,17 +100,14 @@ jobs:
           test -n "$NEW_RELIC_API_KEY" || { echo "::error::GitHub Secret NEW_RELIC_USER_API_KEY nao configurado."; exit 1; }
           test -n "$NEW_RELIC_ACCOUNT_ID" || { echo "::error::GitHub Variable NEW_RELIC_ACCOUNT_ID nao configurada."; exit 1; }
 
-      - name: Terraform init workloads
+      - name: Terraform init application
         if: steps.state.outputs.exists == 'true'
-        env:
-          TF_VAR_state_bucket_name: ${{ steps.state.outputs.state_bucket }}
-          TF_VAR_api_image: destroy-placeholder
         run: >-
-          terraform -chdir=infra/aws/workloads init
+          terraform -chdir=infra/aws/application init
           -input=false
           -backend-config="bucket=${{ steps.state.outputs.state_bucket }}"
 
-      - name: Destroy Kubernetes workloads
+      - name: Destroy application
         if: steps.state.outputs.exists == 'true'
         env:
           TF_VAR_state_bucket_name: ${{ steps.state.outputs.state_bucket }}
@@ -107,12 +116,4 @@ jobs:
           NEW_RELIC_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
           NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID }}
           NEW_RELIC_REGION: US
-        run: terraform -chdir=infra/aws/workloads destroy -auto-approve -input=false
-
-      - name: Destroy AWS platform
-        if: steps.state.outputs.exists == 'true'
-        run: terraform -chdir=infra/aws/platform destroy -auto-approve -input=false
-
-      - name: Destroy state bucket
-        if: steps.state.outputs.exists == 'true'
-        run: ./infra/aws/scripts/destroy-state.sh
+        run: terraform -chdir=infra/aws/application destroy -auto-approve -input=false

@@ -69,20 +69,16 @@ jobs:
         uses: azure/setup-helm@v4
 
       - name: Check Terraform formatting
-        run: terraform fmt -check -recursive infra/aws
+        run: terraform fmt -check -recursive infra/aws/application
 
-      - name: Initialize Terraform stacks without backends
-        run: |
-          terraform -chdir=infra/aws/platform init -backend=false -input=false
-          terraform -chdir=infra/aws/workloads init -backend=false -input=false
+      - name: Initialize application Terraform without backend
+        run: terraform -chdir=infra/aws/application init -backend=false -input=false
 
-      - name: Validate Terraform stacks
-        run: |
-          terraform -chdir=infra/aws/platform validate -no-color
-          terraform -chdir=infra/aws/workloads validate -no-color
+      - name: Validate application Terraform
+        run: terraform -chdir=infra/aws/application validate -no-color
 
       - name: Validate Kong authentication chart
         run: >-
-          helm lint infra/aws/workloads/charts/kong-auth
+          helm lint infra/aws/application/charts/kong-auth
           --set jwt.issuer=OficinaMecanica.Api
           --set jwt.secret=abcdefghijklmnopqrstuvwxyz1234567890

@@ -5,11 +5,11 @@ locals {
     app = local.app_name
   }
 
-  database_host     = data.terraform_remote_state.platform.outputs.database_address
-  database_port     = tostring(data.terraform_remote_state.platform.outputs.database_port)
-  database_name     = data.terraform_remote_state.platform.outputs.database_name
-  database_username = data.terraform_remote_state.platform.outputs.database_username
-  database_password = data.terraform_remote_state.platform.outputs.database_password
+  database_host     = data.terraform_remote_state.database.outputs.database_address
+  database_port     = tostring(data.terraform_remote_state.database.outputs.database_port)
+  database_name     = data.terraform_remote_state.database.outputs.database_name
+  database_username = data.terraform_remote_state.database.outputs.database_username
+  database_password = data.terraform_remote_state.database.outputs.database_password
 
   connection_string = join("", [
     "server=${local.database_host};",
@@ -223,8 +223,6 @@ resource "kubernetes_deployment_v1" "api" {
       }
     }
   }
-
-  depends_on = [helm_release.new_relic]
 }
 
 resource "kubernetes_service_v1" "api" {

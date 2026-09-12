@@ -37,7 +37,7 @@ variable "admin_username" {
 }
 
 variable "new_relic_license_key" {
-  description = "Chave de ingestao usada pelos agentes New Relic da API e do Kubernetes."
+  description = "Chave de ingestao usada pelo agente APM embarcado na imagem da API."
   type        = string
   sensitive   = true
 

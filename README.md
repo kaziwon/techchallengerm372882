@@ -9,6 +9,18 @@ infraestrutura local permanece documentada apenas como historico da Fase 2. Os
 fluxos da AWS usam runners hospedados pelo GitHub e nao dependem do notebook
 estar ligado.
 
+## Repositorios da Fase 3
+
+| Repositorio | Responsabilidade |
+|---|---|
+| [infraestrutura de banco](https://github.com/kaziwon/oficina-mecanica-infra-banco) | Bucket de state, VPC, sub-redes, Security Group e RDS MySQL |
+| [infraestrutura Kubernetes](https://github.com/kaziwon/oficina-mecanica-infra-kubernetes) | EKS, nodes, ECR, Metrics Server, Kong e New Relic Kubernetes |
+| [aplicacao principal](https://github.com/kaziwon/techchallengerm372882) | Codigo, migrations, imagem, Deployment, Service, HPA, rotas no Kong e observabilidade da API |
+| [autenticacao serverless](https://github.com/kaziwon/oficina-mecanica-autenticacao-lambda) | Lambda de autenticacao por CPF e emissao de JWT |
+
+Cada repositorio possui integracao continua, entrega manual para producao e
+destruicao dos recursos sob sua responsabilidade.
+
 ## Fluxo de CI e deploy manual
 
 ```text
@@ -16,51 +28,51 @@ pull request para main
   -> integracao continua em ubuntu-latest
   -> build, testes automatizados e validacao Terraform
 
-execucao manual de Entrega continua AWS na main
-  -> cria ou recupera o bucket S3 de estado
-  -> Terraform cria VPC, ECR, EKS, Metrics Server e RDS
-  -> Docker gera a imagem da API e publica no ECR
-  -> Terraform publica API, HPA e Kong Gateway no EKS
-  -> Kong exige JWT nas rotas administrativas e mantem as rotas externas publicas
-  -> Terraform instala o New Relic no EKS e cria uptime e alertas
-  -> pipeline valida Kong, pods, metricas, health check e Swagger
-
-execucao manual no repositorio oficina-mecanica-autenticacao-lambda
-  -> publica a Lambda que valida CPF, consulta o RDS e emite JWT
+execucoes manuais de entrega na main, nesta ordem
+  -> banco cria o state compartilhado, VPC e RDS
+  -> Kubernetes cria EKS, ECR, Metrics Server, Kong e New Relic Kubernetes
+  -> aplicacao publica a imagem e implanta API, HPA, rotas, uptime e alertas
+  -> Lambda publica a autenticacao por CPF e emissao de JWT
 ```
 
-O deploy de producao existe somente como execucao manual em `Actions -> Entrega
-continua AWS -> Run workflow`, selecionando a branch `main`. Assim, commits e
-pull requests executam verificacoes sem criar recursos ou gerar custos na AWS.
+O deploy de producao existe somente como execucao manual nas Actions de cada
+repositorio, selecionando a branch `main`. Assim, commits e pull requests
+executam verificacoes sem criar recursos ou gerar custos na AWS.
 
 O bucket S3 de estado e a unica excecao ao provider AWS do Terraform: ele precisa
 existir antes da inicializacao do backend e e preparado pelo AWS CLI. Essa forma
 tambem evita a consulta de Object Lock proibida pela politica da AWS Academy.
-Todos os recursos da aplicacao, incluindo EKS e RDS, continuam declarados e
-provisionados pelo Terraform.
+Todos os recursos AWS continuam declarados e provisionados pelo Terraform, mas
+agora cada state e cada pipeline possuem um proprietario claro.
 
 ## Arquitetura AWS
 
 ```mermaid
 flowchart TD
-    DEV["Push na main"] --> CI["GitHub Actions - CI"]
-    CI --> CD["GitHub Actions - CD AWS"]
-    CD --> S3["S3 - estado Terraform"]
-    CD --> ECR["ECR - imagem da API"]
-    CD --> TF["Terraform"]
-    TF --> VPC["VPC dedicada"]
-    VPC --> EKS["EKS + Managed Node Group"]
-    VPC --> RDS["RDS MySQL privado"]
-    ECR --> API["Deployment da API"]
+    DEV["Pull requests"] --> CI["CI dos quatro repositorios"]
+    CI --> DBPIPE["CD manual - Banco"]
+    DBPIPE --> K8SPIPE["CD manual - Kubernetes"]
+    K8SPIPE --> APPPIPE["CD manual - Aplicacao"]
+    APPPIPE --> LAMBDAPIPE["CD manual - Lambda"]
+    DBPIPE --> S3["S3 - states Terraform"]
+    DBPIPE --> VPC["VPC dedicada"]
+    DBPIPE --> RDS["RDS MySQL privado"]
+    K8SPIPE --> ECR["ECR - imagem da API"]
+    K8SPIPE --> EKS["EKS + Managed Node Group"]
+    K8SPIPE --> KONG["Kong Gateway"]
+    APPPIPE --> API["Deployment + Service + HPA"]
+    LAMBDAPIPE --> LAMBDA["Lambda - autenticacao por CPF"]
+    VPC --> EKS
+    VPC --> RDS
+    ECR --> API
     EKS --> API
     EKS --> HPA["HPA + Metrics Server"]
     API --> RDS
-    EKS --> KONG["Kong Gateway + Ingress Controller"]
     USER["Swagger e clientes da API"] --> LB["Network Load Balancer"]
     LB --> KONG
     KONG --> API
     USER --> LURL["Lambda Function URL - HTTPS"]
-    LURL --> LAMBDA["Lambda - autenticacao por CPF"]
+    LURL --> LAMBDA
     LAMBDA --> RDS
     LAMBDA -. "JWT compartilhado" .-> KONG
     EKS --> NRK8S["New Relic Kubernetes"]
@@ -86,8 +98,8 @@ Kong.
 
 ## Credenciais do AWS Academy
 
-As credenciais do Learner Lab sao temporarias. No repositorio do GitHub, em
-`Settings -> Secrets and variables -> Actions`, devem existir estes secrets:
+As credenciais do Learner Lab sao temporarias. Em cada repositorio do GitHub,
+em `Settings -> Secrets and variables -> Actions`, devem existir estes secrets:
 
 - `AWS_ACCESS_KEY_ID`;
 - `AWS_SECRET_ACCESS_KEY`;
@@ -120,22 +132,21 @@ aproveitam o workflow de notificacao por e-mail ja configurado nessa policy.
 
 ## Recuperacao depois de Reset
 
-O workflow foi preparado para uma conta vazia. Se o Reset do Academy remover os
-recursos, a proxima execucao:
+Os workflows foram preparados para uma conta vazia. Se o Reset do Academy
+remover os recursos, execute novamente as quatro entregas na ordem:
 
-1. identifica a conta autenticada;
-2. recria o bucket S3 se ele nao existir;
-3. recria a plataforma pelo Terraform;
-4. publica novamente a imagem;
-5. recria os workloads no EKS.
+1. banco;
+2. Kubernetes;
+3. aplicacao;
+4. Lambda.
 
 Nao e necessario executar Terraform, Docker ou `kubectl` no notebook para esse
 fluxo. O primeiro deploy pode demorar porque EKS, RDS e Load Balancer precisam
 ser provisionados pela AWS.
 
 Como New Relic esta fora da conta AWS, o Reset do Academy nao apaga seus
-recursos. Execute primeiro o workflow `Destruir infraestrutura AWS` sempre que
-possivel; ele remove o monitor e as condicoes antes de apagar o estado Terraform.
+recursos. Sempre que possivel, use os workflows de destruicao na ordem inversa:
+Lambda, aplicacao, Kubernetes e banco.
 
 Se o Reset for executado antes do workflow, remova os recursos externos
 restantes com:
@@ -147,18 +158,16 @@ NEW_RELIC_ACCOUNT_ID=8366160 ./infra/aws/scripts/cleanup-new-relic-aws.sh
 O script solicita a User API Key sem exibi-la, lista os recursos encontrados e
 preserva a policy e o workflow de notificacao por e-mail.
 
-## Organizacao da infraestrutura AWS
+## Organizacao da aplicacao na AWS
 
-- `infra/aws/platform/`: cria rede, ECR, EKS, Metrics Server e RDS;
-- `infra/aws/workloads/`: publica API, HPA, Kong Gateway, rotas, autenticacao JWT e observabilidade;
-- `infra/aws/scripts/`: prepara ou remove o bucket S3 de estado automaticamente;
-- `.github/workflows/entrega-continua.yml`: entrega manual de producao na AWS;
-- `.github/workflows/destruir-infraestrutura-aws.yml`: destruicao manual protegida por confirmacao;
+- `infra/aws/application/`: Deployment, Service, HPA, configuracao da API no Kong e observabilidade da aplicacao;
+- `infra/aws/scripts/cleanup-new-relic-aws.sh`: limpeza de emergencia caso o Reset apague os states antes do Terraform;
+- `.github/workflows/entrega-continua.yml`: entrega manual somente da aplicacao;
+- `.github/workflows/destruir-infraestrutura-aws.yml`: destruicao manual somente da aplicacao;
 - `.github/workflows/entrega-continua-local.yml`: preserva o deploy local da Fase 2.
 
-Para remover os recursos antes de encerrar o laboratorio, execute em Actions o
-workflow `Destruir infraestrutura AWS` e informe `DESTRUIR`. Ele remove primeiro
-os workloads, depois a plataforma e por ultimo o bucket de estado.
+Os recursos de banco e Kubernetes nao sao mais criados nem destruidos por este
+repositorio. Suas pipelines ficam nos repositorios correspondentes.
  
 # ---- Fase 2 ----
 
