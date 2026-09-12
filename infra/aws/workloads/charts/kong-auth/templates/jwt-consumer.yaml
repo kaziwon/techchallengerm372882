@@ -1,0 +1,9 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongConsumer
+metadata:
+  name: oficina-mecanica-jwt
+  annotations:
+    kubernetes.io/ingress.class: kong
+username: oficina-mecanica-jwt
+credentials:
+  - oficina-mecanica-jwt-credential

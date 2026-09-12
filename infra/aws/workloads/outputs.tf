@@ -29,6 +29,12 @@ output "admin_password" {
   sensitive   = true
 }
 
+output "jwt_secret" {
+  description = "Segredo compartilhado com os emissores e validadores de JWT."
+  value       = random_password.jwt_secret.result
+  sensitive   = true
+}
+
 output "new_relic_app_name" {
   description = "Nome da entidade APM criada quando a API enviar a primeira telemetria."
   value       = var.new_relic_app_name

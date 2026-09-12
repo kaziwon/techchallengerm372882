@@ -24,6 +24,10 @@ public class AppDbContext : DbContext
             .IsUnique();
 
         modelBuilder.Entity<Cliente>()
+            .Property(cliente => cliente.Ativo)
+            .HasDefaultValue(true);
+
+        modelBuilder.Entity<Cliente>()
             .HasMany(cliente => cliente.Veiculos)
             .WithOne(veiculo => veiculo.Cliente)
             .HasForeignKey(veiculo => veiculo.ClienteId);

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kong-auth
+description: Recursos do Kong que validam os JWTs da Oficina Mecanica
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

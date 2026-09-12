@@ -10,7 +10,8 @@ le o estado da plataforma no S3 e publica no EKS apenas os componentes da aplica
 - Service interno `ClusterIP`;
 - Horizontal Pod Autoscaler;
 - Kong Gateway e Kong Ingress Controller;
-- rota de entrada para a API;
+- rotas publicas e protegidas da API;
+- plugin JWT, Consumer e credencial do Kong;
 - agente de infraestrutura do New Relic instalado pelo Helm;
 - monitor sintetico do endpoint `/health`;
 - condicoes de alerta para indisponibilidade e respostas 5xx nas ordens de servico.
@@ -22,8 +23,12 @@ gerenciado pela plataforma como add-on do EKS.
 O chart oficial `kong/ingress` instala o Kong em modo DB-less. Apenas o proxy
 do Kong usa um Service `LoadBalancer`; a API nao possui endereco publico proprio.
 Uma rota com prefixo `/` preserva o caminho original e encaminha `/api`,
-`/swagger` e `/health` para o Service interno da aplicacao. Essa configuracao
-substitui o cadastro manual de Services e Routes em uma interface administrativa.
+`/swagger` e `/health` para o Service interno da aplicacao. Rotas regex de maior
+prioridade recebem o plugin JWT e exigem um token assinado pelo segredo
+compartilhado. A consulta de OS por CPF e a notificacao externa de orcamento nao
+casam com essas regex e permanecem publicas. Essa configuracao substitui o
+cadastro manual de Services, Routes, Consumers e Plugins em uma interface
+administrativa.
 
 As senhas do banco, do JWT e do administrador e a license key do New Relic nao
 ficam gravadas no Git. Elas ficam nos estados criptografados no S3 e nos Secrets

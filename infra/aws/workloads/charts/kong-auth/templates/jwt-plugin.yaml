@@ -1,0 +1,9 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: oficina-mecanica-jwt
+plugin: jwt
+config:
+  key_claim_name: iss
+  claims_to_verify:
+    - exp

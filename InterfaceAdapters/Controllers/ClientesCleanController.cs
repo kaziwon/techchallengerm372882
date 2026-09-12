@@ -77,7 +77,8 @@ public class ClientesCleanController
             Nome = cliente.Nome,
             CpfCnpj = cliente.CpfCnpj,
             Email = cliente.Email,
-            Telefone = cliente.Telefone
+            Telefone = cliente.Telefone,
+            Ativo = cliente.Ativo
         };
     }
 }

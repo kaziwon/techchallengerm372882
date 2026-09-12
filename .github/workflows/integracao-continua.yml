@@ -65,6 +65,9 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
       - name: Check Terraform formatting
         run: terraform fmt -check -recursive infra/aws
 
@@ -77,3 +80,9 @@ jobs:
         run: |
           terraform -chdir=infra/aws/platform validate -no-color
           terraform -chdir=infra/aws/workloads validate -no-color
+
+      - name: Validate Kong authentication chart
+        run: >-
+          helm lint infra/aws/workloads/charts/kong-auth
+          --set jwt.issuer=OficinaMecanica.Api
+          --set jwt.secret=abcdefghijklmnopqrstuvwxyz1234567890
