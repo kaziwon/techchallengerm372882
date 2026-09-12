@@ -18,6 +18,11 @@ output "database_subnet_ids" {
   value       = values(aws_subnet.database)[*].id
 }
 
+output "database_security_group_id" {
+  description = "Security Group do RDS usado para liberar consumidores internos."
+  value       = aws_security_group.database.id
+}
+
 output "ecr_repository_url" {
   description = "Endereco do repositorio privado da imagem da API."
   value       = aws_ecr_repository.api.repository_url

@@ -1,5 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using OficinaMecanica.Api.Infrastructure.Persistence;
 using OficinaMecanica.Api.InterfaceAdapters.DTOs;
 
 namespace OficinaMecanica.Api.IntegrationTests;
@@ -105,8 +108,13 @@ public class ClienteEndpointsTests
         var deleteResponse = await client.DeleteAsync($"/api/clientes/{clienteCriado!.Id}");
         var getResponse = await client.GetAsync($"/api/clientes/{clienteCriado.Id}");
 
+        using var scope = factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var clientePersistido = await context.Clientes.SingleAsync(cliente => cliente.Id == clienteCriado.Id);
+
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
+        Assert.False(clientePersistido.Ativo);
     }
 
     private static ClienteRequestDto CriarRequest()

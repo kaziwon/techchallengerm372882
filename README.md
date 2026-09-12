@@ -21,8 +21,12 @@ execucao manual de Entrega continua AWS na main
   -> Terraform cria VPC, ECR, EKS, Metrics Server e RDS
   -> Docker gera a imagem da API e publica no ECR
   -> Terraform publica API, HPA e Kong Gateway no EKS
+  -> Kong exige JWT nas rotas administrativas e mantem as rotas externas publicas
   -> Terraform instala o New Relic no EKS e cria uptime e alertas
   -> pipeline valida Kong, pods, metricas, health check e Swagger
+
+execucao manual no repositorio oficina-mecanica-autenticacao-lambda
+  -> publica a Lambda que valida CPF, consulta o RDS e emite JWT
 ```
 
 O deploy de producao existe somente como execucao manual em `Actions -> Entrega
@@ -55,6 +59,10 @@ flowchart TD
     USER["Swagger e clientes da API"] --> LB["Network Load Balancer"]
     LB --> KONG
     KONG --> API
+    USER --> LURL["Lambda Function URL - HTTPS"]
+    LURL --> LAMBDA["Lambda - autenticacao por CPF"]
+    LAMBDA --> RDS
+    LAMBDA -. "JWT compartilhado" .-> KONG
     EKS --> NRK8S["New Relic Kubernetes"]
     API --> NRAPM["New Relic APM + Logs"]
     NRSYN["New Relic Synthetics"] --> LB
@@ -64,6 +72,17 @@ O Kong e instalado em modo DB-less pelo chart Helm oficial. Sua configuracao e
 declarada no Kubernetes, sem cadastro manual pela interface. O Load Balancer do
 Kong e o unico ponto de entrada publico; o Service da API usa `ClusterIP` e so
 pode ser acessado de dentro do cluster.
+
+O plugin JWT do Kong protege as rotas administrativas de clientes, veiculos,
+servicos, pecas e ordens de servico. `/health`, `/swagger`, o login
+administrativo, a consulta de OS por CPF e a notificacao externa de orcamento
+continuam publicos. A API ainda valida o JWT internamente, mantendo uma segunda
+barreira alem do gateway.
+
+A autenticacao de clientes por CPF pertence ao repositorio separado
+`oficina-mecanica-autenticacao-lambda`. A Lambda consulta o campo `Ativo` da
+tabela `Clientes` e assina tokens com o mesmo segredo utilizado pela API e pelo
+Kong.
 
 ## Credenciais do AWS Academy
 
@@ -131,7 +150,7 @@ preserva a policy e o workflow de notificacao por e-mail.
 ## Organizacao da infraestrutura AWS
 
 - `infra/aws/platform/`: cria rede, ECR, EKS, Metrics Server e RDS;
-- `infra/aws/workloads/`: publica API, HPA, Kong Gateway, rota e observabilidade;
+- `infra/aws/workloads/`: publica API, HPA, Kong Gateway, rotas, autenticacao JWT e observabilidade;
 - `infra/aws/scripts/`: prepara ou remove o bucket S3 de estado automaticamente;
 - `.github/workflows/entrega-continua.yml`: entrega manual de producao na AWS;
 - `.github/workflows/destruir-infraestrutura-aws.yml`: destruicao manual protegida por confirmacao;

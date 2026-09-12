@@ -223,10 +223,30 @@ jobs:
           curl --fail --show-error --retry 30 --retry-all-errors --retry-delay 10 --max-time 15 --location --dump-header "$headers_file" --output /dev/null "${api_url}/health"
           grep --ignore-case --extended-regexp '^(server: kong|x-kong-)' "$headers_file" || { echo "::error::A resposta nao apresentou headers do Kong Gateway."; exit 1; }
           curl --fail --show-error --retry 12 --retry-all-errors --retry-delay 10 --max-time 15 --location --output /dev/null "${api_url}/swagger/index.html"
+
+          unauthenticated_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' "${api_url}/api/clientes")"
+          test "$unauthenticated_status" = "401" || {
+            echo "::error::O Kong respondeu HTTP ${unauthenticated_status} sem JWT; era esperado 401."
+            exit 1
+          }
+
+          admin_username="$(terraform -chdir=infra/aws/workloads output -raw admin_username)"
+          admin_password="$(terraform -chdir=infra/aws/workloads output -raw admin_password)"
+          login_payload="$(jq -cn --arg username "$admin_username" --arg password "$admin_password" '{username: $username, password: $password}')"
+          token="$(curl --fail --silent --show-error --retry 12 --retry-all-errors --retry-delay 5 --max-time 15 \
+            --header 'Content-Type: application/json' \
+            --data "$login_payload" \
+            "${api_url}/api/Auth/login" | jq -er '.token')"
+          curl --fail --show-error --max-time 15 \
+            --header "Authorization: Bearer ${token}" \
+            --output /dev/null \
+            "${api_url}/api/clientes"
+
           echo "api_url=${api_url}" >> "$GITHUB_OUTPUT"
           echo "### Deploy AWS concluido" >> "$GITHUB_STEP_SUMMARY"
           echo "API Gateway: ${api_url}" >> "$GITHUB_STEP_SUMMARY"
           echo "Swagger via Kong: ${api_url}/swagger/index.html" >> "$GITHUB_STEP_SUMMARY"
+          echo "Kong JWT: rota protegida rejeitou acesso sem token e aceitou JWT valido" >> "$GITHUB_STEP_SUMMARY"
           echo "New Relic APM: $(terraform -chdir=infra/aws/workloads output -raw new_relic_app_name)" >> "$GITHUB_STEP_SUMMARY"
           echo "New Relic Kubernetes: $(terraform -chdir=infra/aws/workloads output -raw new_relic_cluster_name)" >> "$GITHUB_STEP_SUMMARY"
           echo "Monitor de uptime: $(terraform -chdir=infra/aws/workloads output -raw new_relic_health_monitor_name)" >> "$GITHUB_STEP_SUMMARY"

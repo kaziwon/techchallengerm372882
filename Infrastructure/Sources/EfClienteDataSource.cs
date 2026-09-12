@@ -24,7 +24,7 @@ public class EfClienteDataSource : IClienteDataSource
 
     public Cliente? Atualizar(Cliente cliente)
     {
-        var clienteExistente = _context.Clientes.FirstOrDefault(c => c.Id == cliente.Id);
+        var clienteExistente = _context.Clientes.FirstOrDefault(c => c.Id == cliente.Id && c.Ativo);
 
         if (clienteExistente is null)
         {
@@ -53,29 +53,29 @@ public class EfClienteDataSource : IClienteDataSource
 
     public Cliente? ObterPorId(Guid id)
     {
-        return _context.Clientes.AsNoTracking().FirstOrDefault(cliente => cliente.Id == id);
+        return _context.Clientes.AsNoTracking().FirstOrDefault(cliente => cliente.Id == id && cliente.Ativo);
     }
 
     public Cliente? ObterPorCpfCnpj(string cpfCnpj)
     {
-        return _context.Clientes.AsNoTracking().FirstOrDefault(cliente => cliente.CpfCnpj == cpfCnpj);
+        return _context.Clientes.AsNoTracking().FirstOrDefault(cliente => cliente.CpfCnpj == cpfCnpj && cliente.Ativo);
     }
 
     public List<Cliente> ObterTodos()
     {
-        return _context.Clientes.AsNoTracking().ToList();
+        return _context.Clientes.AsNoTracking().Where(cliente => cliente.Ativo).ToList();
     }
 
     public bool Remover(Guid id)
     {
-        var cliente = _context.Clientes.FirstOrDefault(c => c.Id == id);
+        var cliente = _context.Clientes.FirstOrDefault(c => c.Id == id && c.Ativo);
 
         if (cliente is null)
         {
             return false;
         }
 
-        _context.Clientes.Remove(cliente);
+        cliente.Ativo = false;
         _context.SaveChanges();
 
         return true;

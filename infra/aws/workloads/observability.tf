@@ -115,7 +115,7 @@ resource "newrelic_synthetics_monitor" "api_health" {
 
   depends_on = [
     kubernetes_deployment_v1.api,
-    kubernetes_ingress_v1.api_gateway,
+    kubernetes_ingress_v1.api_public,
   ]
 }
 
