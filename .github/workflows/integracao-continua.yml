@@ -70,12 +70,10 @@ jobs:
 
       - name: Initialize Terraform stacks without backends
         run: |
-          terraform -chdir=infra/aws/bootstrap init -backend=false -input=false
           terraform -chdir=infra/aws/platform init -backend=false -input=false
           terraform -chdir=infra/aws/workloads init -backend=false -input=false
 
       - name: Validate Terraform stacks
         run: |
-          terraform -chdir=infra/aws/bootstrap validate -no-color
           terraform -chdir=infra/aws/platform validate -no-color
           terraform -chdir=infra/aws/workloads validate -no-color

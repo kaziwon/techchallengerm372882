@@ -29,6 +29,12 @@ O deploy de producao existe somente como execucao manual em `Actions -> Entrega
 continua AWS -> Run workflow`, selecionando a branch `main`. Assim, commits e
 pull requests executam verificacoes sem criar recursos ou gerar custos na AWS.
 
+O bucket S3 de estado e a unica excecao ao provider AWS do Terraform: ele precisa
+existir antes da inicializacao do backend e e preparado pelo AWS CLI. Essa forma
+tambem evita a consulta de Object Lock proibida pela politica da AWS Academy.
+Todos os recursos da aplicacao, incluindo EKS e RDS, continuam declarados e
+provisionados pelo Terraform.
+
 ## Arquitetura AWS
 
 ```mermaid
@@ -124,10 +130,9 @@ preserva a policy e o workflow de notificacao por e-mail.
 
 ## Organizacao da infraestrutura AWS
 
-- `infra/aws/bootstrap/`: cria o bucket S3 dos estados Terraform;
 - `infra/aws/platform/`: cria rede, ECR, EKS, Metrics Server e RDS;
 - `infra/aws/workloads/`: publica API, HPA, Kong Gateway, rota e observabilidade;
-- `infra/aws/scripts/`: recupera ou remove o bootstrap de maneira automatica;
+- `infra/aws/scripts/`: prepara ou remove o bucket S3 de estado automaticamente;
 - `.github/workflows/entrega-continua.yml`: entrega manual de producao na AWS;
 - `.github/workflows/destruir-infraestrutura-aws.yml`: destruicao manual protegida por confirmacao;
 - `.github/workflows/entrega-continua-local.yml`: preserva o deploy local da Fase 2.
