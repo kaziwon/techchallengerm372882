@@ -170,7 +170,7 @@ resource "kubernetes_ingress_v1" "api_protected" {
     rule {
       http {
         path {
-          path      = "/~(?i)^/api/(clientes|veiculos|servicos|pecas)(?:/.*)?$"
+          path      = "/~/(?i:api/(clientes|veiculos|servicos|pecas)(?:/.*)?)$"
           path_type = "ImplementationSpecific"
 
           backend {
@@ -185,7 +185,7 @@ resource "kubernetes_ingress_v1" "api_protected" {
         }
 
         path {
-          path      = "/~(?i)^/api/ordensservico(?:/?|/tempo-medio-execucao/?|/[0-9a-f-]{36}/?|/[0-9a-f-]{36}/(?:iniciar-diagnostico|enviar-orcamento|aprovar-orcamento|recusar-orcamento|cancelar|finalizar|entregar)/?)$"
+          path      = "/~/(?i:api/ordensservico(?:/?|/tempo-medio-execucao/?|/[0-9a-f-]{36}/?|/[0-9a-f-]{36}/(?:iniciar-diagnostico|enviar-orcamento|aprovar-orcamento|recusar-orcamento|cancelar|finalizar|entregar)/?))$"
           path_type = "ImplementationSpecific"
 
           backend {
