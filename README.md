@@ -1,5 +1,5 @@
 # Tech Challenge - Oficina Mecânica
-
+.
 Sistema integrado para gestão de oficina mecânica, desenvolvido como MVP de back-end para o Tech Challenge da pós-graduação.
 
 # ---- Fase 3 - AWS Academy ----
