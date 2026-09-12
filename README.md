@@ -4,29 +4,30 @@ Sistema integrado para gestão de oficina mecânica, desenvolvido como MVP de ba
 
 # ---- Fase 3 - AWS Academy ----
 
-Nesta fase, a mesma aplicacao e a mesma infraestrutura Kubernetes da Fase 2
-passam a ser entregues na AWS. O deploy local continua disponivel, mas o fluxo
-automatico da branch `main` usa runners hospedados pelo GitHub e nao depende do
-notebook estar ligado.
+Nesta fase, a aplicacao passa a ser entregue na AWS usando Amazon EKS. A
+infraestrutura local permanece documentada apenas como historico da Fase 2. Os
+fluxos da AWS usam runners hospedados pelo GitHub e nao dependem do notebook
+estar ligado.
 
-## Fluxo automatico
+## Fluxo de CI e deploy manual
 
 ```text
-push na main
-  -> Integracao continua em ubuntu-latest
+pull request para main
+  -> integracao continua em ubuntu-latest
   -> build, testes automatizados e validacao Terraform
-  -> Entrega continua AWS
+
+execucao manual de Entrega continua AWS na main
   -> cria ou recupera o bucket S3 de estado
   -> Terraform cria VPC, ECR, EKS, Metrics Server e RDS
   -> Docker gera a imagem da API e publica no ECR
-  -> Terraform publica Deployment, Service, ConfigMap, Secret e HPA no EKS
+  -> Terraform publica API, HPA e Kong Gateway no EKS
   -> Terraform instala o New Relic no EKS e cria uptime e alertas
-  -> pipeline valida pods, metricas, health check, observabilidade e Swagger
+  -> pipeline valida Kong, pods, metricas, health check e Swagger
 ```
 
-O deploy tambem pode ser iniciado manualmente em `Actions -> Entrega continua
-AWS -> Run workflow`. Isso e util depois de renovar as credenciais do
-laboratorio sem precisar criar um commit vazio.
+O deploy de producao existe somente como execucao manual em `Actions -> Entrega
+continua AWS -> Run workflow`, selecionando a branch `main`. Assim, commits e
+pull requests executam verificacoes sem criar recursos ou gerar custos na AWS.
 
 ## Arquitetura AWS
 
@@ -44,12 +45,19 @@ flowchart TD
     EKS --> API
     EKS --> HPA["HPA + Metrics Server"]
     API --> RDS
-    API --> LB["Network Load Balancer"]
-    LB --> USER["Swagger e API publica"]
+    EKS --> KONG["Kong Gateway + Ingress Controller"]
+    USER["Swagger e clientes da API"] --> LB["Network Load Balancer"]
+    LB --> KONG
+    KONG --> API
     EKS --> NRK8S["New Relic Kubernetes"]
     API --> NRAPM["New Relic APM + Logs"]
     NRSYN["New Relic Synthetics"] --> LB
 ```
+
+O Kong e instalado em modo DB-less pelo chart Helm oficial. Sua configuracao e
+declarada no Kubernetes, sem cadastro manual pela interface. O Load Balancer do
+Kong e o unico ponto de entrada publico; o Service da API usa `ClusterIP` e so
+pode ser acessado de dentro do cluster.
 
 ## Credenciais do AWS Academy
 
@@ -104,13 +112,23 @@ Como New Relic esta fora da conta AWS, o Reset do Academy nao apaga seus
 recursos. Execute primeiro o workflow `Destruir infraestrutura AWS` sempre que
 possivel; ele remove o monitor e as condicoes antes de apagar o estado Terraform.
 
+Se o Reset for executado antes do workflow, remova os recursos externos
+restantes com:
+
+```bash
+NEW_RELIC_ACCOUNT_ID=8366160 ./infra/aws/scripts/cleanup-new-relic-aws.sh
+```
+
+O script solicita a User API Key sem exibi-la, lista os recursos encontrados e
+preserva a policy e o workflow de notificacao por e-mail.
+
 ## Organizacao da infraestrutura AWS
 
 - `infra/aws/bootstrap/`: cria o bucket S3 dos estados Terraform;
 - `infra/aws/platform/`: cria rede, ECR, EKS, Metrics Server e RDS;
-- `infra/aws/workloads/`: publica API, observabilidade, configuracoes, secrets, Service e HPA;
+- `infra/aws/workloads/`: publica API, HPA, Kong Gateway, rota e observabilidade;
 - `infra/aws/scripts/`: recupera ou remove o bootstrap de maneira automatica;
-- `.github/workflows/entrega-continua.yml`: entrega automatica na AWS;
+- `.github/workflows/entrega-continua.yml`: entrega manual de producao na AWS;
 - `.github/workflows/destruir-infraestrutura-aws.yml`: destruicao manual protegida por confirmacao;
 - `.github/workflows/entrega-continua-local.yml`: preserva o deploy local da Fase 2.
 

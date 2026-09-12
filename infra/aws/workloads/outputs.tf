@@ -4,13 +4,18 @@ output "namespace" {
 }
 
 output "load_balancer_hostname" {
-  description = "Hostname publico criado pelo Service LoadBalancer."
-  value       = try(kubernetes_service_v1.api.status[0].load_balancer[0].ingress[0].hostname, null)
+  description = "Hostname publico do Kong Gateway."
+  value       = try(data.kubernetes_service_v1.kong_proxy.status[0].load_balancer[0].ingress[0].hostname, null)
 }
 
 output "api_url" {
-  description = "URL publica da API."
-  value       = try("http://${kubernetes_service_v1.api.status[0].load_balancer[0].ingress[0].hostname}", null)
+  description = "URL publica da API, exposta exclusivamente pelo Kong Gateway."
+  value       = try("http://${data.kubernetes_service_v1.kong_proxy.status[0].load_balancer[0].ingress[0].hostname}", null)
+}
+
+output "kong_namespace" {
+  description = "Namespace Kubernetes do Kong Gateway."
+  value       = kubernetes_namespace_v1.kong.metadata[0].name
 }
 
 output "admin_username" {

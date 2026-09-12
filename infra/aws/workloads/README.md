@@ -7,8 +7,10 @@ plataforma no S3 e publica no EKS apenas os componentes da aplicacao:
 - ConfigMap;
 - Secret;
 - Deployment da API;
-- Service `LoadBalancer`;
+- Service interno `ClusterIP`;
 - Horizontal Pod Autoscaler;
+- Kong Gateway e Kong Ingress Controller;
+- rota de entrada para a API;
 - agente de infraestrutura do New Relic instalado pelo Helm;
 - monitor sintetico do endpoint `/health`;
 - condicoes de alerta para indisponibilidade e respostas 5xx nas ordens de servico.
@@ -16,6 +18,12 @@ plataforma no S3 e publica no EKS apenas os componentes da aplicacao:
 O MySQL nao e criado como pod neste ambiente. A conexao da API aponta para a
 instancia RDS privada criada pelo stack `platform`. O Metrics Server tambem e
 gerenciado pela plataforma como add-on do EKS.
+
+O chart oficial `kong/ingress` instala o Kong em modo DB-less. Apenas o proxy
+do Kong usa um Service `LoadBalancer`; a API nao possui endereco publico proprio.
+Uma rota com prefixo `/` preserva o caminho original e encaminha `/api`,
+`/swagger` e `/health` para o Service interno da aplicacao. Essa configuracao
+substitui o cadastro manual de Services e Routes em uma interface administrativa.
 
 As senhas do banco, do JWT e do administrador e a license key do New Relic nao
 ficam gravadas no Git. Elas ficam nos estados criptografados no S3 e nos Secrets
@@ -73,6 +81,12 @@ terraform -chdir=infra/aws/workloads output -raw admin_password
 Para conferir a integracao depois do deploy:
 
 ```bash
+kubectl get pods,service -n kong
+kubectl get ingress -n oficina-mecanica
 kubectl get pods -n newrelic
-kubectl get pods,hpa -n oficina-mecanica
+kubectl get pods,service,hpa -n oficina-mecanica
+terraform -chdir=infra/aws/workloads output -raw api_url
 ```
+
+O Service `kong-gateway-proxy` deve apresentar um endereco externo. O Service
+`oficina-mecanica-api` deve continuar como `ClusterIP` e sem endereco externo.

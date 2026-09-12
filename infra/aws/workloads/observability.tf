@@ -94,7 +94,7 @@ resource "newrelic_synthetics_monitor" "api_health" {
   status           = "ENABLED"
   name             = local.synthetic_healthcheck_name
   period           = "EVERY_MINUTE"
-  uri              = "http://${kubernetes_service_v1.api.status[0].load_balancer[0].ingress[0].hostname}/health"
+  uri              = "http://${data.kubernetes_service_v1.kong_proxy.status[0].load_balancer[0].ingress[0].hostname}/health"
   type             = "SIMPLE"
   locations_public = [var.new_relic_synthetics_location]
 
@@ -113,7 +113,10 @@ resource "newrelic_synthetics_monitor" "api_health" {
     values = [local.app_name]
   }
 
-  depends_on = [kubernetes_deployment_v1.api]
+  depends_on = [
+    kubernetes_deployment_v1.api,
+    kubernetes_ingress_v1.api_gateway,
+  ]
 }
 
 resource "newrelic_nrql_alert_condition" "service_order_failures" {
