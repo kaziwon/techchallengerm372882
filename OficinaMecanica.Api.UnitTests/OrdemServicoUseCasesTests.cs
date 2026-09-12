@@ -262,6 +262,7 @@ public class OrdemServicoUseCasesTests
         Assert.Equal(StatusOrdemServico.EmDiagnostico, response.Status);
         Assert.Equal(StatusAprovacaoOrcamento.Recusado, response.StatusAprovacaoOrcamento);
         Assert.Equal("Nao aprovado", response.MotivoRecusaOrcamento);
+        Assert.NotNull(response.DiagnosticoEm);
     }
 
     [Fact]

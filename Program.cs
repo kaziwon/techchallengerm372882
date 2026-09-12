@@ -12,7 +12,9 @@ using OficinaMecanica.Api.Application.UseCases.Veiculos;
 using OficinaMecanica.Api.InterfaceAdapters.DataSources;
 using OficinaMecanica.Api.Infrastructure.Settings;
 using OficinaMecanica.Api.Infrastructure.Sources;
+using OficinaMecanica.Api.Infrastructure.Observability;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using OficinaMecanica.Api.Infrastructure.Persistence;
 using OficinaMecanica.Api.InterfaceAdapters.Controllers;
 using OficinaMecanica.Api.InterfaceAdapters.Gateways;
@@ -21,6 +23,13 @@ var builder = WebApplication.CreateBuilder(args);
 var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
 var jwtSettings = jwtSettingsSection.Get<JwtSettings>()!;
 var jwtKey = Encoding.UTF8.GetBytes(jwtSettings.SecretKey);
+
+builder.Logging.Configure(options =>
+{
+    options.ActivityTrackingOptions = ActivityTrackingOptions.TraceId |
+                                      ActivityTrackingOptions.SpanId |
+                                      ActivityTrackingOptions.ParentId;
+});
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -122,12 +131,16 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-if (app.Environment.IsDevelopment())
+var swaggerEnabled = app.Environment.IsDevelopment() ||
+                     app.Configuration.GetValue<bool>("Swagger:Enabled");
+
+if (swaggerEnabled)
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

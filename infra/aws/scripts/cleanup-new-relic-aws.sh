@@ -3,6 +3,7 @@
 set -euo pipefail
 
 readonly MONITOR_NAME="Oficina Mecanica API - AWS - Health"
+readonly DASHBOARD_NAME="Oficina Mecanica - Operacao AWS"
 readonly CONDITION_NAMES=(
   "Falhas no processamento de ordens de servico - AWS"
   "Indisponibilidade do healthcheck - AWS"
@@ -129,6 +130,31 @@ monitors="$(
     ]' <<< "${monitor_response}"
 )"
 
+dashboard_query='query FindAwsDashboard($name: String!) {
+  actor {
+    entitySearch(queryBuilder: {type: DASHBOARD, name: $name}) {
+      results {
+        entities {
+          accountId
+          guid
+          name
+        }
+      }
+    }
+  }
+}'
+dashboard_variables="$(jq -cn --arg name "${DASHBOARD_NAME}" '{name: $name}')"
+dashboard_response="$(nerdgraph "${dashboard_query}" "${dashboard_variables}")"
+dashboards="$(
+  jq -c \
+    --arg name "${DASHBOARD_NAME}" \
+    --argjson account_id "${account_id}" \
+    '[
+      (.data.actor.entitySearch.results.entities // [])[]
+      | select(.accountId == $account_id and .name == $name)
+    ]' <<< "${dashboard_response}"
+)"
+
 condition_query='query FindAwsConditions($accountId: Int!, $name: String!) {
   actor {
     account(id: $accountId) {
@@ -172,8 +198,9 @@ for condition_name in "${CONDITION_NAMES[@]}"; do
 done
 
 monitor_count="$(jq 'length' <<< "${monitors}")"
+dashboard_count="$(jq 'length' <<< "${dashboards}")"
 condition_count="$(jq 'length' <<< "${conditions}")"
-total_count="$((monitor_count + condition_count))"
+total_count="$((monitor_count + dashboard_count + condition_count))"
 
 if [[ "${total_count}" -eq 0 ]]; then
   echo "Nenhum recurso AWS do New Relic foi encontrado. Nada para remover."
@@ -182,6 +209,7 @@ fi
 
 echo "Recursos encontrados na conta ${account_id}:"
 jq -r '.[] | "- Monitor: \(.name) [\(.guid)]"' <<< "${monitors}"
+jq -r '.[] | "- Dashboard: \(.name) [\(.guid)]"' <<< "${dashboards}"
 jq -r '.[] | "- Condicao: \(.name) [\(.id)]"' <<< "${conditions}"
 
 printf '\nA policy e o workflow de e-mail nao serao removidos.\n'
@@ -217,6 +245,34 @@ while IFS=$'\t' read -r monitor_guid monitor_name; do
 
   echo "Monitor removido: ${monitor_name}"
 done < <(jq -r '.[] | [.guid, .name] | @tsv' <<< "${monitors}")
+
+delete_dashboard_query='mutation DeleteDashboard($guid: EntityGuid!) {
+  dashboardDelete(guid: $guid) {
+    status
+    errors {
+      type
+      description
+    }
+  }
+}'
+
+while IFS=$'\t' read -r dashboard_guid dashboard_name; do
+  [[ -n "${dashboard_guid}" ]] || continue
+
+  dashboard_variables="$(jq -cn --arg guid "${dashboard_guid}" '{guid: $guid}')"
+  delete_response="$(
+    nerdgraph "${delete_dashboard_query}" "${dashboard_variables}"
+  )"
+  delete_errors="$(jq '.data.dashboardDelete.errors // [] | length' <<< "${delete_response}")"
+
+  if [[ "${delete_errors}" -ne 0 ]]; then
+    echo "O New Relic nao confirmou a remocao do dashboard ${dashboard_name}:" >&2
+    jq -r '.data.dashboardDelete.errors[] | "- \(.description)"' <<< "${delete_response}" >&2
+    exit 1
+  fi
+
+  echo "Dashboard removido: ${dashboard_name}"
+done < <(jq -r '.[] | [.guid, .name] | @tsv' <<< "${dashboards}")
 
 while IFS=$'\t' read -r condition_id condition_name; do
   [[ -n "${condition_id}" ]] || continue

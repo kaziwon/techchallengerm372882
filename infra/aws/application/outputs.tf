@@ -3,19 +3,9 @@ output "namespace" {
   value       = kubernetes_namespace_v1.application.metadata[0].name
 }
 
-output "load_balancer_hostname" {
-  description = "Hostname publico do Kong Gateway."
-  value       = try(data.kubernetes_service_v1.kong_proxy.status[0].load_balancer[0].ingress[0].hostname, null)
-}
-
 output "api_url" {
   description = "URL publica da API, exposta exclusivamente pelo Kong Gateway."
-  value       = try("http://${data.kubernetes_service_v1.kong_proxy.status[0].load_balancer[0].ingress[0].hostname}", null)
-}
-
-output "kong_namespace" {
-  description = "Namespace Kubernetes do Kong Gateway."
-  value       = kubernetes_namespace_v1.kong.metadata[0].name
+  value       = data.terraform_remote_state.kubernetes_addons.outputs.api_gateway_url
 }
 
 output "admin_username" {
@@ -42,10 +32,20 @@ output "new_relic_app_name" {
 
 output "new_relic_cluster_name" {
   description = "Nome usado para identificar o cluster EKS no New Relic."
-  value       = data.terraform_remote_state.platform.outputs.eks_cluster_name
+  value       = data.terraform_remote_state.kubernetes_cluster.outputs.eks_cluster_name
 }
 
 output "new_relic_health_monitor_name" {
   description = "Nome do monitor sintetico que consulta o endpoint de healthcheck."
   value       = newrelic_synthetics_monitor.api_health.name
+}
+
+output "new_relic_dashboard_name" {
+  description = "Nome do dashboard operacional criado no New Relic."
+  value       = newrelic_one_dashboard.operations.name
+}
+
+output "new_relic_dashboard_url" {
+  description = "Link direto para o dashboard operacional no New Relic."
+  value       = newrelic_one_dashboard.operations.permalink
 }

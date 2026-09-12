@@ -1,13 +1,21 @@
 {
   "info": {
     "name": "Oficina Mecanica - Tech Challenge",
-    "description": "Collection das APIs da Oficina Mecanica para a Fase 2. Use baseUrl=http://localhost:18080 para Kubernetes local ou baseUrl=http://localhost:8080 para Docker Compose.",
+    "description": "Collection integrada das Fases 2 e 3. Em ambiente local use baseUrl=http://localhost:18080 ou http://localhost:8080. Na AWS, atualize baseUrl com o endpoint do Kong e lambdaUrl com a Function URL.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://localhost:18080"
+    },
+    {
+      "key": "lambdaUrl",
+      "value": "https://SUA_FUNCTION_URL.lambda-url.us-east-1.on.aws"
+    },
+    {
+      "key": "correlationId",
+      "value": "postman-fase3-oficina"
     },
     {
       "key": "token",
@@ -48,12 +56,24 @@
       }
     ]
   },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const correlationId = pm.collectionVariables.get('correlationId') || pm.variables.replace('{{$guid}}');",
+          "pm.request.headers.upsert({ key: 'X-Correlation-ID', value: correlationId });"
+        ]
+      }
+    }
+  ],
   "item": [
     {
       "name": "Autenticacao",
       "item": [
         {
-          "name": "Login",
+          "name": "Login administrativo",
           "event": [
             {
               "listen": "test",
@@ -85,6 +105,43 @@
               "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin@123\"\n}"
             },
             "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Autenticar cliente por CPF na Lambda",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cliente autenticado', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "if (body.token) {",
+                  "  pm.collectionVariables.set('token', body.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cpf\": \"{{clienteCpfCnpj}}\"\n}"
+            },
+            "url": "{{lambdaUrl}}/"
           }
         }
       ]

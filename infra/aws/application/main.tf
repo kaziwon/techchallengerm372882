@@ -5,11 +5,11 @@ locals {
     app = local.app_name
   }
 
-  database_host     = data.terraform_remote_state.platform.outputs.database_address
-  database_port     = tostring(data.terraform_remote_state.platform.outputs.database_port)
-  database_name     = data.terraform_remote_state.platform.outputs.database_name
-  database_username = data.terraform_remote_state.platform.outputs.database_username
-  database_password = data.terraform_remote_state.platform.outputs.database_password
+  database_host     = data.terraform_remote_state.database.outputs.database_address
+  database_port     = tostring(data.terraform_remote_state.database.outputs.database_port)
+  database_name     = data.terraform_remote_state.database.outputs.database_name
+  database_username = data.terraform_remote_state.database.outputs.database_username
+  database_password = data.terraform_remote_state.database.outputs.database_password
 
   connection_string = join("", [
     "server=${local.database_host};",
@@ -45,8 +45,9 @@ resource "kubernetes_config_map_v1" "application" {
   }
 
   data = {
-    ASPNETCORE_ENVIRONMENT                                        = "Development"
+    ASPNETCORE_ENVIRONMENT                                        = "Production"
     ASPNETCORE_URLS                                               = "http://+:8080"
+    Swagger__Enabled                                              = "true"
     JwtSettings__Issuer                                           = "OficinaMecanica.Api"
     JwtSettings__Audience                                         = "OficinaMecanica.Api"
     CORECLR_ENABLE_PROFILING                                      = "1"
@@ -223,8 +224,6 @@ resource "kubernetes_deployment_v1" "api" {
       }
     }
   }
-
-  depends_on = [helm_release.new_relic]
 }
 
 resource "kubernetes_service_v1" "api" {

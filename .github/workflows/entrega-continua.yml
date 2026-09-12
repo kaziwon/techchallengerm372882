@@ -1,4 +1,4 @@
-name: Entrega continua AWS
+name: Entrega continua AWS - Aplicacao
 
 env:
   AWS_REGION: us-east-1
@@ -11,32 +11,27 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: oficina-mecanica-aws-deploy
+  group: oficina-mecanica-application-deploy
   cancel-in-progress: false
 
 jobs:
-  infrastructure:
-    name: Provision AWS infrastructure
+  dependencies:
+    name: Validate infrastructure dependencies
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
 
     outputs:
-      state_bucket: ${{ steps.bootstrap.outputs.state_bucket }}
-      ecr_repository_url: ${{ steps.platform_outputs.outputs.ecr_repository_url }}
-      eks_cluster_name: ${{ steps.platform_outputs.outputs.eks_cluster_name }}
+      state_bucket: ${{ steps.infrastructure.outputs.state_bucket }}
+      ecr_repository_url: ${{ steps.infrastructure.outputs.ecr_repository_url }}
+      eks_cluster_name: ${{ steps.infrastructure.outputs.eks_cluster_name }}
 
     steps:
       - name: Validate production branch
         run: >-
           test "$GITHUB_REF_NAME" = "main" ||
-          { echo "::error::O deploy de producao deve ser executado a partir da branch main."; exit 1; }
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.SOURCE_SHA }}
+          { echo "::error::O deploy deve ser executado a partir da branch main."; exit 1; }
 
       - name: Validate New Relic configuration
         env:
@@ -48,52 +43,51 @@ jobs:
           test -n "$NEW_RELIC_API_KEY" || { echo "::error::GitHub Secret NEW_RELIC_USER_API_KEY nao configurado."; exit 1; }
           test -n "$NEW_RELIC_ACCOUNT_ID" || { echo "::error::GitHub Variable NEW_RELIC_ACCOUNT_ID nao configurada."; exit 1; }
 
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
+        uses: ./.github/actions/configure-aws-credentials
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TERRAFORM_VERSION }}
-          terraform_wrapper: false
-
-      - name: Validate AWS session
-        run: aws sts get-caller-identity
-
-      - name: Prepare Terraform state bucket
-        id: bootstrap
-        run: ./infra/aws/scripts/bootstrap-state.sh
-
-      - name: Terraform init platform
-        run: >-
-          terraform -chdir=infra/aws/platform init
-          -input=false
-          -backend-config="bucket=${{ steps.bootstrap.outputs.state_bucket }}"
-
-      - name: Terraform validate platform
-        run: terraform -chdir=infra/aws/platform validate -no-color
-
-      - name: Terraform plan platform
-        run: terraform -chdir=infra/aws/platform plan -input=false -no-color -out=platform.tfplan
-
-      - name: Terraform apply platform
-        run: terraform -chdir=infra/aws/platform apply -input=false platform.tfplan
-
-      - name: Read platform outputs
-        id: platform_outputs
+      - name: Read infrastructure outputs
+        id: infrastructure
         run: |
-          echo "ecr_repository_url=$(terraform -chdir=infra/aws/platform output -raw ecr_repository_url)" >> "$GITHUB_OUTPUT"
-          echo "eks_cluster_name=$(terraform -chdir=infra/aws/platform output -raw eks_cluster_name)" >> "$GITHUB_OUTPUT"
+          account_id="$(aws sts get-caller-identity --query Account --output text)"
+          state_bucket="${PROJECT_NAME}-terraform-state-${account_id}"
+          cluster_state="$(mktemp)"
+
+          aws s3api head-bucket --bucket "$state_bucket" >/dev/null || {
+            echo "::error::Execute primeiro as entregas de banco e Kubernetes."
+            exit 1
+          }
+
+          for state_key in \
+            oficina-mecanica/database/terraform.tfstate \
+            oficina-mecanica/kubernetes-cluster/terraform.tfstate \
+            oficina-mecanica/kubernetes-addons/terraform.tfstate; do
+            aws s3api head-object --bucket "$state_bucket" --key "$state_key" >/dev/null || {
+              echo "::error::State obrigatorio ausente: ${state_key}"
+              exit 1
+            }
+          done
+
+          aws s3 cp \
+            "s3://${state_bucket}/oficina-mecanica/kubernetes-cluster/terraform.tfstate" \
+            "$cluster_state" >/dev/null
+
+          echo "state_bucket=${state_bucket}" >> "$GITHUB_OUTPUT"
+          echo "ecr_repository_url=$(jq -er '.outputs.ecr_repository_url.value' "$cluster_state")" >> "$GITHUB_OUTPUT"
+          echo "eks_cluster_name=$(jq -er '.outputs.eks_cluster_name.value' "$cluster_state")" >> "$GITHUB_OUTPUT"
 
   image:
     name: Publish API image
     runs-on: ubuntu-latest
-    needs: infrastructure
+    needs: dependencies
 
     permissions:
       contents: read
@@ -108,7 +102,7 @@ jobs:
           ref: ${{ env.SOURCE_SHA }}
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
+        uses: ./.github/actions/configure-aws-credentials
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -121,7 +115,7 @@ jobs:
       - name: Build and push API image
         id: image
         env:
-          ECR_REPOSITORY_URL: ${{ needs.infrastructure.outputs.ecr_repository_url }}
+          ECR_REPOSITORY_URL: ${{ needs.dependencies.outputs.ecr_repository_url }}
         run: |
           image_uri="${ECR_REPOSITORY_URL}:${SOURCE_SHA}"
           docker build --tag "$image_uri" --tag "${ECR_REPOSITORY_URL}:latest" .
@@ -133,14 +127,14 @@ jobs:
     name: Deploy application to EKS
     runs-on: ubuntu-latest
     needs:
-      - infrastructure
+      - dependencies
       - image
 
     permissions:
       contents: read
 
     env:
-      TF_VAR_state_bucket_name: ${{ needs.infrastructure.outputs.state_bucket }}
+      TF_VAR_state_bucket_name: ${{ needs.dependencies.outputs.state_bucket }}
       TF_VAR_api_image: ${{ needs.image.outputs.image_uri }}
 
     steps:
@@ -150,7 +144,7 @@ jobs:
           ref: ${{ env.SOURCE_SHA }}
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
+        uses: ./.github/actions/configure-aws-credentials
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -170,55 +164,48 @@ jobs:
         run: >-
           aws eks update-kubeconfig
           --region "$AWS_REGION"
-          --name "${{ needs.infrastructure.outputs.eks_cluster_name }}"
+          --name "${{ needs.dependencies.outputs.eks_cluster_name }}"
 
       - name: Wait for EKS nodes
         run: kubectl wait --for=condition=Ready nodes --all --timeout=300s
 
-      - name: Terraform init workloads
+      - name: Terraform init application
         run: >-
-          terraform -chdir=infra/aws/workloads init
+          terraform -chdir=infra/aws/application init
           -input=false
-          -backend-config="bucket=${{ needs.infrastructure.outputs.state_bucket }}"
+          -backend-config="bucket=${{ needs.dependencies.outputs.state_bucket }}"
 
-      - name: Terraform validate workloads
-        run: terraform -chdir=infra/aws/workloads validate -no-color
+      - name: Terraform validate application
+        run: terraform -chdir=infra/aws/application validate -no-color
 
-      - name: Terraform plan workloads
+      - name: Terraform plan application
         env:
           TF_VAR_new_relic_license_key: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
           NEW_RELIC_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
           NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID }}
           NEW_RELIC_REGION: US
-        run: terraform -chdir=infra/aws/workloads plan -input=false -no-color -out=workloads.tfplan
+        run: terraform -chdir=infra/aws/application plan -input=false -no-color -out=application.tfplan
 
-      - name: Terraform apply workloads
+      - name: Terraform apply application
         env:
           TF_VAR_new_relic_license_key: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
           NEW_RELIC_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
           NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID }}
           NEW_RELIC_REGION: US
-        run: terraform -chdir=infra/aws/workloads apply -input=false workloads.tfplan
+        run: terraform -chdir=infra/aws/application apply -input=false application.tfplan
 
       - name: Validate Kubernetes resources
         run: |
-          kubectl rollout status deployment/metrics-server -n kube-system --timeout=300s
           kubectl rollout status deployment/oficina-mecanica-api -n oficina-mecanica --timeout=300s
-          kubectl wait --for=condition=Ready pod --all -n kong --timeout=600s
-          kubectl get nodes
-          kubectl get deployments,daemonsets,pods -n newrelic
-          kubectl get deployments,pods,service -n kong
-          kubectl get ingress -n oficina-mecanica
-          kubectl get pods,service,hpa -n oficina-mecanica
+          kubectl get ingress,pods,service,hpa -n oficina-mecanica
           kubectl top pods -n oficina-mecanica
 
           service_type="$(kubectl get service oficina-mecanica-api -n oficina-mecanica -o jsonpath='{.spec.type}')"
-          test "$service_type" = "ClusterIP" || { echo "::error::A API ainda esta exposta diretamente como $service_type."; exit 1; }
+          test "$service_type" = "ClusterIP" || { echo "::error::A API esta exposta diretamente como ${service_type}."; exit 1; }
 
-      - name: Validate public API
-        id: api
+      - name: Validate public API and Kong JWT
         run: |
-          api_url="$(terraform -chdir=infra/aws/workloads output -raw api_url)"
+          api_url="$(terraform -chdir=infra/aws/application output -raw api_url)"
           headers_file="$(mktemp)"
           curl --fail --show-error --retry 30 --retry-all-errors --retry-delay 10 --max-time 15 --location --dump-header "$headers_file" --output /dev/null "${api_url}/health"
           grep --ignore-case --extended-regexp '^(server: kong|x-kong-)' "$headers_file" || { echo "::error::A resposta nao apresentou headers do Kong Gateway."; exit 1; }
@@ -230,8 +217,8 @@ jobs:
             exit 1
           }
 
-          admin_username="$(terraform -chdir=infra/aws/workloads output -raw admin_username)"
-          admin_password="$(terraform -chdir=infra/aws/workloads output -raw admin_password)"
+          admin_username="$(terraform -chdir=infra/aws/application output -raw admin_username)"
+          admin_password="$(terraform -chdir=infra/aws/application output -raw admin_password)"
           login_payload="$(jq -cn --arg username "$admin_username" --arg password "$admin_password" '{username: $username, password: $password}')"
           token="$(curl --fail --silent --show-error --retry 12 --retry-all-errors --retry-delay 5 --max-time 15 \
             --header 'Content-Type: application/json' \
@@ -242,11 +229,11 @@ jobs:
             --output /dev/null \
             "${api_url}/api/clientes"
 
-          echo "api_url=${api_url}" >> "$GITHUB_OUTPUT"
-          echo "### Deploy AWS concluido" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Aplicacao implantada" >> "$GITHUB_STEP_SUMMARY"
           echo "API Gateway: ${api_url}" >> "$GITHUB_STEP_SUMMARY"
           echo "Swagger via Kong: ${api_url}/swagger/index.html" >> "$GITHUB_STEP_SUMMARY"
           echo "Kong JWT: rota protegida rejeitou acesso sem token e aceitou JWT valido" >> "$GITHUB_STEP_SUMMARY"
-          echo "New Relic APM: $(terraform -chdir=infra/aws/workloads output -raw new_relic_app_name)" >> "$GITHUB_STEP_SUMMARY"
-          echo "New Relic Kubernetes: $(terraform -chdir=infra/aws/workloads output -raw new_relic_cluster_name)" >> "$GITHUB_STEP_SUMMARY"
-          echo "Monitor de uptime: $(terraform -chdir=infra/aws/workloads output -raw new_relic_health_monitor_name)" >> "$GITHUB_STEP_SUMMARY"
+          echo "New Relic APM: $(terraform -chdir=infra/aws/application output -raw new_relic_app_name)" >> "$GITHUB_STEP_SUMMARY"
+          echo "New Relic Kubernetes: $(terraform -chdir=infra/aws/application output -raw new_relic_cluster_name)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Monitor de uptime: $(terraform -chdir=infra/aws/application output -raw new_relic_health_monitor_name)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Dashboard New Relic: $(terraform -chdir=infra/aws/application output -raw new_relic_dashboard_url)" >> "$GITHUB_STEP_SUMMARY"
